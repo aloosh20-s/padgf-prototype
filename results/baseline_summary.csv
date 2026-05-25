@@ -1,0 +1,3 @@
+scenario_name,fork_block,dex,input_token,output_token,input_amount,expected_output,actual_output,gas_used,status
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success

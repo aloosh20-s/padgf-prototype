@@ -1,0 +1,2 @@
+scenario_name,fork_block,dex,input_token,output_token,victim_input_amount,baseline_expected_output,attacked_actual_output,victim_output_loss,financial_loss_percentage,attacker_gas_used,status
+Phase 2 Sandwich Attack,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3896.536466,3.147737,0.08%,243827,success

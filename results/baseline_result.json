@@ -1,0 +1,15 @@
+{
+  "scenario_name": "Phase 1 Baseline",
+  "fork_block": 19400000,
+  "dex": "Uniswap V2",
+  "input_token": "WETH",
+  "output_token": "USDC",
+  "input_amount": "1.0",
+  "slippage_tolerance": "1%",
+  "expected_output": "3899.684203",
+  "actual_output": "3899.684203",
+  "gas_used": "108507",
+  "transaction_hash": "0x70906bb72235fbf15f98052defb7151832be9c5c7203d764951370811664ff57",
+  "execution_status": "success",
+  "timestamp": "2026-05-25T14:18:28.777Z"
+}

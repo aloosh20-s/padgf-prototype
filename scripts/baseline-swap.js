@@ -1,93 +1,89 @@
 const hre = require("hardhat");
+const { 
+    WETH_ADDRESS, USDC_ADDRESS, ROUTER_ADDRESS, 
+    IMPERSONATED_ACCOUNT, FORK_BLOCK, WETH_DECIMALS, USDC_DECIMALS 
+} = require("../src/constants.js");
+const { setupProviderAndSigner } = require("../src/providerSetup.js");
+const { getTokens, getRouter, getQuote, executeSwap } = require("../src/dexInteraction.js");
+const { formatOutput, saveResult } = require("../src/resultLogger.js");
 
 async function main() {
+    console.log("Starting Baseline Swap Simulation...");
     try {
-        const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-        const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-        const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-        const IMPERSONATED_ACCOUNT = "0x28C6c06298d514Db089934071355E5743bf21d60";
+        const signer = await setupProviderAndSigner(IMPERSONATED_ACCOUNT);
+        console.log(`Impersonated account: ${signer.address}`);
 
-        // 1. Connect to Hardhat fork / Impersonate
-        await hre.network.provider.request({
-            method: "hardhat_impersonateAccount",
-            params: [IMPERSONATED_ACCOUNT],
-        });
+        const { weth, usdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, signer);
+        const router = await getRouter(ROUTER_ADDRESS, signer);
 
-        // Provide some ETH to the account for gas
-        await hre.network.provider.send("hardhat_setBalance", [
-            IMPERSONATED_ACCOUNT,
-            "0x8AC7230489E80000" // 10 ETH
-        ]);
-
-        const signer = await hre.ethers.getSigner(IMPERSONATED_ACCOUNT);
-
-        // ABIs
-        const ERC20_ABI = [
-            "function approve(address spender, uint256 amount) external returns (bool)",
-            "function balanceOf(address account) external view returns (uint256)"
-        ];
-        const ROUTER_ABI = [
-            "function getAmountsOut(uint amountIn, address[] memory path) public view returns (uint[] memory amounts)",
-            "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts)"
-        ];
-
-        const weth = new hre.ethers.Contract(WETH_ADDRESS, ERC20_ABI, signer);
-        const usdc = new hre.ethers.Contract(USDC_ADDRESS, ERC20_ABI, signer);
-        const router = new hre.ethers.Contract(ROUTER_ADDRESS, ROUTER_ABI, signer);
-
-        const amountIn = hre.ethers.parseUnits("1.0", 18);
+        const amountInEth = "1.0";
+        const amountIn = hre.ethers.parseUnits(amountInEth, WETH_DECIMALS);
         const path = [WETH_ADDRESS, USDC_ADDRESS];
 
-        // Quote
-        const amountsOut = await router.getAmountsOut(amountIn, path);
-        const expectedOutput = amountsOut[1];
+        console.log("Fetching quote on Uniswap V2...");
+        const expectedOutputWei = await getQuote(router, amountIn, path);
+        const expectedOutput = hre.ethers.formatUnits(expectedOutputWei, USDC_DECIMALS);
+        console.log(`Expected output: ${expectedOutput} USDC`);
 
-        // Approve
-        const approveTx = await weth.approve(ROUTER_ADDRESS, amountIn);
-        await approveTx.wait();
+        const usdcBalanceBefore = await usdc.balanceOf(signer.address);
 
-        const usdcBalanceBefore = await usdc.balanceOf(IMPERSONATED_ACCOUNT);
+        const slippageTolerance = 1; // 1%
+        console.log(`Executing swap with ${slippageTolerance}% slippage tolerance...`);
+        const receipt = await executeSwap(router, weth, amountIn, expectedOutputWei, path, signer, slippageTolerance);
 
-        // Execute
-        // 99% of expected output to allow for 1% slippage
-        const amountOutMin = (expectedOutput * 99n) / 100n;
+        const usdcBalanceAfter = await usdc.balanceOf(signer.address);
+        const actualOutputWei = usdcBalanceAfter - usdcBalanceBefore;
+        const actualOutput = hre.ethers.formatUnits(actualOutputWei, USDC_DECIMALS);
+        console.log(`Actual output: ${actualOutput} USDC`);
 
-        const currentBlock = await hre.ethers.provider.getBlock("latest");
-        const deadline = currentBlock.timestamp + 1200; // 20 minutes from current block
+        // Validation Checks
+        if (receipt.status !== 1) throw new Error("Validation Failed: Transaction status is not 1 (success).");
+        if (actualOutputWei <= 0n) throw new Error("Validation Failed: Actual output is 0 or less.");
+        if (!receipt.gasUsed || receipt.gasUsed <= 0n) throw new Error("Validation Failed: Gas usage not properly recorded.");
 
-        const swapTx = await router.swapExactTokensForTokens(
-            amountIn,
-            amountOutMin,
-            path,
-            signer.address,
-            deadline
-        );
-
-        const receipt = await swapTx.wait();
-
-        const usdcBalanceAfter = await usdc.balanceOf(IMPERSONATED_ACCOUNT);
-        const actualOutput = usdcBalanceAfter - usdcBalanceBefore;
-
-        const result = {
-            phase: "1_baseline",
-            status: "success",
+        const resultData = formatOutput({
+            scenario_name: "Phase 1 Baseline",
+            fork_block: FORK_BLOCK,
+            dex: "Uniswap V2",
             input_token: "WETH",
-            input_amount: amountIn.toString(),
             output_token: "USDC",
-            expected_output: expectedOutput.toString(),
-            actual_output: actualOutput.toString(),
+            input_amount: amountInEth,
+            slippage_tolerance: `${slippageTolerance}%`,
+            expected_output: expectedOutput,
+            actual_output: actualOutput,
+            gas_used: receipt.gasUsed.toString(),
             transaction_hash: receipt.hash,
-            gas_used: receipt.gasUsed.toString()
-        };
+            execution_status: "success"
+        });
 
-        console.log(JSON.stringify(result, null, 2));
+        saveResult(resultData, "baseline_result.json");
+        console.log("Result Payload:");
+        console.log(JSON.stringify(resultData, null, 2));
 
     } catch (error) {
-        console.error(JSON.stringify({
-            phase: "1_baseline",
-            status: "error",
-            error: error.message
-        }, null, 2));
+        console.error("Execution Error:", error.message);
+        
+        const errorData = formatOutput({
+            scenario_name: "Phase 1 Baseline",
+            fork_block: FORK_BLOCK,
+            dex: "Uniswap V2",
+            input_token: "WETH",
+            output_token: "USDC",
+            input_amount: "1.0",
+            slippage_tolerance: "1%",
+            expected_output: "0",
+            actual_output: "0",
+            gas_used: "0",
+            transaction_hash: "N/A",
+            execution_status: `error: ${error.message}`
+        });
+
+        const fs = require('fs');
+        const path = require('path');
+        const resultsDir = path.join(__dirname, '..', 'results');
+        if (!fs.existsSync(resultsDir)) fs.mkdirSync(resultsDir, { recursive: true });
+        fs.writeFileSync(path.join(resultsDir, 'baseline_error.json'), JSON.stringify(errorData, null, 2));
+
         process.exit(1);
     }
 }

@@ -1,0 +1,23 @@
+{
+  "scenario_name": "Phase 3 Protected Swap",
+  "fork_block": 19400000,
+  "dex": "Uniswap V2",
+  "input_token": "WETH",
+  "output_token": "USDC",
+  "input_amount": "1.0",
+  "reference_output": "3899.684203",
+  "simulated_output": "3899.684203",
+  "slippage_deviation": "0",
+  "price_impact": "0",
+  "gas_sensitivity": "56.263038815",
+  "normalized_risk_score": "0.07501738508666667",
+  "threshold_values": {
+    "tau1": 0.3,
+    "tau2": 0.7
+  },
+  "padgf_decision": "Execute",
+  "execution_allowed": true,
+  "execution_status": "success",
+  "transaction_hash": "0x4960151423a563f06bf017ae28f9c3db41e9e0bf66fc4365d235d8311cfa8322",
+  "timestamp": "2026-05-25T14:04:33.052Z"
+}

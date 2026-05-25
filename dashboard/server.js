@@ -1,0 +1,154 @@
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
+
+const PORT = 3000;
+const resultsDir = path.join(__dirname, '..', 'results');
+const customDir = path.join(resultsDir, 'custom_runs');
+
+const serveStaticFile = (res, filePath, contentType) => {
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            res.writeHead(500);
+            res.end(`Error loading ${filePath}`);
+        } else {
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(data);
+        }
+    });
+};
+
+const runScript = (scriptName, res) => {
+    const cmd = `npx hardhat run scripts/${scriptName} --network localhost`;
+    const cwd = path.join(__dirname, '..');
+    
+    exec(cmd, { cwd }, (error, stdout, stderr) => {
+        if (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message, stderr }));
+            return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, stdout }));
+    });
+};
+
+const parseBody = (req) => {
+    return new Promise((resolve) => {
+        let body = '';
+        req.on('data', chunk => body += chunk);
+        req.on('end', () => {
+            try { resolve(JSON.parse(body)); }
+            catch { resolve({}); }
+        });
+    });
+};
+
+const server = http.createServer(async (req, res) => {
+    // Static files
+    if (req.method === 'GET' && req.url === '/') {
+        serveStaticFile(res, path.join(__dirname, 'public', 'index.html'), 'text/html');
+    } else if (req.method === 'GET' && req.url === '/style.css') {
+        serveStaticFile(res, path.join(__dirname, 'public', 'style.css'), 'text/css');
+    } else if (req.method === 'GET' && req.url === '/script.js') {
+        serveStaticFile(res, path.join(__dirname, 'public', 'script.js'), 'application/javascript');
+
+    // Official thesis results
+    } else if (req.method === 'GET' && req.url === '/api/results') {
+        const safeRead = (filename) => {
+            try { return JSON.parse(fs.readFileSync(path.join(resultsDir, filename))); }
+            catch { return null; }
+        };
+        const payload = {
+            baseline: safeRead('baseline_result.json'),
+            sandwich: safeRead('sandwich_attack_result.json'),
+            protected: safeRead('protected_swap_result.json')
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(payload));
+
+    // Official phase runs (unchanged thesis logic)
+    } else if (req.method === 'POST' && req.url === '/api/run/phase1') {
+        runScript('baseline-swap.js', res);
+    } else if (req.method === 'POST' && req.url === '/api/run/phase2') {
+        runScript('sandwich-attack.js', res);
+    } else if (req.method === 'POST' && req.url === '/api/run/phase3') {
+        runScript('protected-swap.js', res);
+
+    // Custom exploratory run
+    } else if (req.method === 'POST' && req.url === '/api/run/custom') {
+        const body = await parseBody(req);
+        const amount = body.amount || '1.0';
+        const slippage = body.slippage || '1';
+        const scenario = body.scenario || 'baseline';
+
+        const cwd = path.join(__dirname, '..');
+        const envVars = `set CUSTOM_AMOUNT=${amount}&& set CUSTOM_SLIPPAGE=${slippage}&& set CUSTOM_SCENARIO=${scenario}&& `;
+        const cmd = `${envVars}npx hardhat run scripts/custom-run.js --network localhost`;
+
+        exec(cmd, { cwd, shell: 'cmd.exe' }, (error, stdout, stderr) => {
+            if (error) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error.message, stderr }));
+                return;
+            }
+            // Read the custom result file
+            let resultData = null;
+            const fileMap = { baseline: 'custom_baseline.json', sandwich: 'custom_sandwich.json', protected: 'custom_protected.json' };
+            try {
+                resultData = JSON.parse(fs.readFileSync(path.join(customDir, fileMap[scenario])));
+            } catch (e) { /* ignore */ }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, stdout, result: resultData }));
+        });
+
+    // Read latest custom results
+    } else if (req.method === 'GET' && req.url === '/api/custom-results') {
+        const safeRead = (filename) => {
+            try { return JSON.parse(fs.readFileSync(path.join(customDir, filename))); }
+            catch { return null; }
+        };
+        const payload = {
+            baseline: safeRead('custom_baseline.json'),
+            sandwich: safeRead('custom_sandwich.json'),
+            protected: safeRead('custom_protected.json')
+        };
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(payload));
+
+    // Download files
+    } else if (req.method === 'GET' && req.url.startsWith('/api/download/')) {
+        const filename = req.url.replace('/api/download/', '');
+        // Prevent directory traversal
+        const safeName = path.basename(filename);
+        const filePath = path.join(resultsDir, safeName);
+        
+        fs.readFile(filePath, (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end("File not found");
+            } else {
+                const isCSV = safeName.endsWith('.csv');
+                res.writeHead(200, {
+                    'Content-Type': isCSV ? 'text/csv' : 'application/json',
+                    'Content-Disposition': `attachment; filename="${safeName}"`
+                });
+                res.end(data);
+            }
+        });
+    } else {
+        res.writeHead(404);
+        res.end('Not Found');
+    }
+});
+
+server.listen(PORT, () => {
+    console.log(`===============================================`);
+    console.log(`PADGF Supervisor Dashboard Server Initialized`);
+    console.log(`===============================================`);
+    console.log(`Access interface at: http://localhost:${PORT}`);
+    console.log(`Note: 'npx hardhat node' must be running in another terminal.`);
+    console.log(`Press Ctrl+C to stop.`);
+});

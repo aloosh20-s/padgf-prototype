@@ -1,0 +1,20 @@
+{
+  "scenario_name": "Phase 2 Sandwich Attack",
+  "fork_block": 19400000,
+  "dex": "Uniswap V2",
+  "input_token": "WETH",
+  "output_token": "USDC",
+  "victim_input_amount": "1.0",
+  "slippage_tolerance": "1%",
+  "baseline_expected_output": "3899.684203",
+  "attacked_actual_output": "3896.536466",
+  "victim_output_loss": "3.147737",
+  "financial_loss_percentage": "0.08%",
+  "attacker_gas_used": "243827",
+  "victim_gas_used": "108507",
+  "frontrun_hash": "0xa40a5818591c8ff416a4fea628a1e6a3d487d60530c66792fce7d6ea036c4cb5",
+  "victim_hash": "0x848251c56a4f63c17c027ebad55296a09e1cf070d3c599e4e1671d55c0c5e48b",
+  "backrun_hash": "0x931f827c265bafedbdf3aad00332a3f722143afddddb28d81d73e2e24fcf8e0d",
+  "execution_status": "success",
+  "timestamp": "2026-05-25T13:48:30.189Z"
+}
