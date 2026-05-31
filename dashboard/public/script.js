@@ -198,12 +198,12 @@ function renderCustomResult(result) {
 
     // Build metric rows dynamically based on what fields exist
     const rows = [
-        ["Run Type", result.run_type],
+        ["Run Type", result.run_type || result.demo_type || "Custom Run"],
         ["Scenario", result.scenario],
-        ["Fork Block", result.fork_block],
-        ["DEX", result.dex],
-        ["Token Pair", `${result.input_token} → ${result.output_token}`],
-        ["Input Amount", `${result.input_amount || result.victim_input_amount} WETH`],
+        ["Fork Block", result.fork_block || "19400000 (Thesis Default)"],
+        ["DEX", result.dex || "Uniswap V2"],
+        ["Token Pair", result.input_token ? `${result.input_token} → ${result.output_token}` : "WETH → USDC"],
+        ["Input Amount", typeof result.input_amount === 'string' ? result.input_amount : `${result.input_amount || result.victim_input_amount || 0} WETH`],
         ["Slippage Tolerance", result.slippage_tolerance],
     ];
 
@@ -220,13 +220,21 @@ function renderCustomResult(result) {
     if (result.gas_used) rows.push(["Gas Used", result.gas_used]);
     if (result.victim_gas_used) rows.push(["Victim Gas Used", result.victim_gas_used]);
     if (result.attacker_gas_used) rows.push(["Attacker Gas Used", result.attacker_gas_used]);
-    if (result.normalized_risk_score) rows.push(["Risk Score (Exposure Estimate)", parseFloat(result.normalized_risk_score).toFixed(4)]);
-    if (result.padgf_decision) rows.push(["PADGF Risk-Aware Decision", result.padgf_decision]);
+    
+    // Demo mode fields
+    if (result.tau1 !== undefined) rows.push(["Threshold tau1", result.tau1]);
+    if (result.tau2 !== undefined) rows.push(["Threshold tau2", result.tau2]);
+    if (result.normalized_risk_score !== undefined) rows.push(["Risk Score (Exposure Estimate)", parseFloat(result.normalized_risk_score).toFixed(4)]);
+
+    if (result.decision) rows.push(["PADGF Decision", result.decision]);
+    else if (result.padgf_decision) rows.push(["PADGF Risk-Aware Decision", result.padgf_decision]);
+    if (result.explanation) rows.push(["Explanation", result.explanation]);
+
     if (result.execution_allowed !== undefined) rows.push(["Execution Allowed", String(result.execution_allowed)]);
     if (result.transaction_hash) rows.push(["Transaction Hash", result.transaction_hash || "N/A"]);
 
-    rows.push(["Execution Status", result.execution_status]);
-    rows.push(["Timestamp", result.timestamp]);
+    if (result.execution_status) rows.push(["Execution Status", result.execution_status]);
+    if (result.timestamp) rows.push(["Timestamp", result.timestamp]);
 
     rows.forEach(([label, value]) => {
         const tr = document.createElement("tr");
@@ -238,6 +246,68 @@ function renderCustomResult(result) {
         tr.innerHTML = `<td class="metric-name">${label}</td><td><span class="${cls}">${value}</span></td>`;
         tbody.appendChild(tr);
     });
+
+    renderCustomChart(result);
+}
+
+function renderCustomChart(result) {
+    const chartContainer = document.getElementById("custom-bar-chart");
+    if (!chartContainer) return;
+    chartContainer.innerHTML = '';
+
+    let labels = [];
+    let values = [];
+
+    // Depending on the scenario, plot relevant outputs
+    if (result.scenario && result.scenario.includes("Baseline")) {
+        labels = ["Expected Output", "Actual Output"];
+        values = [
+            parseFloat(result.expected_output || result.baseline_expected_output || 0),
+            parseFloat(result.actual_output || 0)
+        ];
+    } else if (result.scenario && result.scenario.includes("Sandwich")) {
+        labels = ["Baseline Expected", "Attacked Output"];
+        values = [
+            parseFloat(result.baseline_expected_output || 0),
+            parseFloat(result.attacked_actual_output || 0)
+        ];
+    } else if (result.scenario && result.scenario.includes("Protected")) {
+        labels = ["Reference Output", "Simulated Output", "Actual Final Output"];
+        values = [
+            parseFloat(result.reference_output || 0),
+            parseFloat(result.simulated_output || 0),
+            parseFloat(result.actual_output || result.simulated_output || 0)
+        ];
+    } else {
+        // Fallback generic plotting
+        if (result.expected_output) { labels.push("Expected"); values.push(parseFloat(result.expected_output)); }
+        if (result.actual_output) { labels.push("Actual"); values.push(parseFloat(result.actual_output)); }
+    }
+
+    const validValues = values.filter(v => !isNaN(v) && v > 0);
+    if (validValues.length === 0) return;
+
+    const minVal = Math.min(...validValues) - (Math.min(...validValues) * 0.05);
+    const maxVal = Math.max(...validValues) + (Math.max(...validValues) * 0.05);
+
+    const createBar = (label, value) => {
+        if (!value) return '<div class="bar-wrapper"></div>';
+        const heightPct = Math.max(5, ((value - minVal) / (maxVal - minVal)) * 100);
+        return `
+            <div class="bar-wrapper">
+                <div class="bar-value">${value.toFixed(2)}</div>
+                <div class="bar" style="height: ${heightPct}%;"></div>
+                <div class="bar-label" style="font-size: 11px;">${label}</div>
+            </div>
+        `;
+    };
+
+    let innerHTML = '';
+    for (let i = 0; i < values.length; i++) {
+        innerHTML += createBar(labels[i], values[i]);
+    }
+    
+    chartContainer.innerHTML = innerHTML;
 }
 
 // =================== INIT ===================

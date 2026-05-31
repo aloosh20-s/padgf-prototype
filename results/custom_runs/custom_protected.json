@@ -5,15 +5,15 @@
   "dex": "Uniswap V2",
   "input_token": "WETH",
   "output_token": "USDC",
-  "input_amount": "5.0",
-  "slippage_tolerance": "2%",
-  "reference_output": "19492.133473",
-  "simulated_output": "19492.133473",
-  "actual_output": "19492.133473",
+  "input_amount": "2.0",
+  "slippage_tolerance": "1%",
+  "reference_output": "6876.681199",
+  "simulated_output": "6876.681199",
+  "actual_output": "6876.681199",
   "slippage_deviation": "0",
   "price_impact": "0",
-  "gas_sensitivity": "56.263038815",
-  "normalized_risk_score": "0.07501738508666667",
+  "gas_sensitivity": "1.072157545",
+  "normalized_risk_score": "0.0014295433933333335",
   "threshold_values": {
     "tau1": 0.3,
     "tau2": 0.7
@@ -21,6 +21,6 @@
   "padgf_decision": "Execute",
   "execution_allowed": true,
   "execution_status": "success",
-  "transaction_hash": "0xe8406d0aa7c461129c81c292bf0dd1947544bcdba144cece56b1f037cc378a3d",
-  "timestamp": "2026-05-25T15:43:04.042Z"
+  "transaction_hash": "0x08e25d6de1e5d930275f76f8b99232f50cdc74e893841787f1aed085569d24d1",
+  "timestamp": "2026-05-31T14:24:15.313Z"
 }

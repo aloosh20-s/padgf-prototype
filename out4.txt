@@ -1,0 +1,25 @@
+﻿Ôùç injected env (1) from .env // tip: Ôùê secrets for agents [www.dotenvx.com]
+[Exploratory Test] Baseline Swap | 2.0 WETH | 0.5% slippage
+node : Custom run error: 
+Swap Execution Error: The 
+number 99.5 cannot be 
+converted to a BigInt 
+because it is not an 
+integer
+At line:1 char:88
++ ... ; $env:CUSTOM_SLIPPA
+GE="0.5"; node 
+scripts/custom-run.js 
+*>&1 | Out-F ...
++                         
+          ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (C  
+  ustom run erro... not   
+  an integer:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 

@@ -1,0 +1,16 @@
+{
+  "run_type": "Exploratory Test",
+  "scenario": "Baseline Swap",
+  "fork_block": 19400000,
+  "dex": "Uniswap V2",
+  "input_token": "WETH",
+  "output_token": "USDC",
+  "input_amount": "10.0",
+  "slippage_tolerance": "2%",
+  "expected_output": "35549.136517",
+  "actual_output": "35549.136517",
+  "gas_used": "108531",
+  "transaction_hash": "0x5ad69ec14ac1ece12b51dda78bdeceaafb631bf46d989116345d45325c6ab7ef",
+  "execution_status": "success",
+  "timestamp": "2026-05-31T14:16:56.480Z"
+}

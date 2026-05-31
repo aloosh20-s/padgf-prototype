@@ -313,6 +313,12 @@ tbody tr:hover { background-color: #f9fbff; }
     margin-bottom: 20px;
 }
 
+.demo-notice {
+    font-size: 0.85em;
+    color: #d35400;
+    grid-column: 1 / -1;
+}
+
 .custom-panel {
     background: #f8f9fa;
     padding: 20px;

@@ -6,10 +6,10 @@
   "output_token": "USDC",
   "input_amount": "1.0",
   "slippage_tolerance": "1%",
-  "expected_output": "3899.684203",
-  "actual_output": "3899.684203",
-  "gas_used": "108507",
-  "transaction_hash": "0x70906bb72235fbf15f98052defb7151832be9c5c7203d764951370811664ff57",
+  "expected_output": "3558.483381",
+  "actual_output": "3558.483381",
+  "gas_used": "108519",
+  "transaction_hash": "0xb30359b811fa9b3176bb515bb7e5c95de9be86dcbc6aef511b1795acc302aacf",
   "execution_status": "success",
-  "timestamp": "2026-05-25T14:18:28.777Z"
+  "timestamp": "2026-05-31T14:12:08.341Z"
 }

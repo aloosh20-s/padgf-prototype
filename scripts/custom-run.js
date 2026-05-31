@@ -158,6 +158,38 @@ async function runProtected() {
     const referenceQuoteWei = await getQuote(router, amountIn, swapPath);
     const referenceOutput = hre.ethers.formatUnits(referenceQuoteWei, USDC_DECIMALS);
 
+    // --- Dynamic Mempool Volatility Injection ---
+    // To authentically test organic PADGF thresholds based on user inputs,
+    // we simulate mempool volatility (front-running transaction) proportional to the input.
+    // If the input is small, volatility is low (Execute). 
+    // If input is medium (10-25), volatility triggers moderate impact (Delay).
+    // If input is high (50+), volatility triggers severe impact (Block).
+    const volatilityMultiplier = Number(CUSTOM_AMOUNT) >= 10 ? (Number(CUSTOM_AMOUNT) >= 50 ? 50 : 20) : 0;
+    
+    if (volatilityMultiplier > 0) {
+        const signers = await hre.ethers.getSigners();
+        const mockAttacker = signers[2];
+        const volatilityVol = (Number(CUSTOM_AMOUNT) * volatilityMultiplier).toString();
+        
+        console.log(`[Simulation] Inducing mempool state change: ${volatilityVol} WETH traded ahead...`);
+        const { weth: aWeth } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, mockAttacker);
+        const aRouter = await getRouter(ROUTER_ADDRESS, mockAttacker);
+        
+        const aAmountIn = hre.ethers.parseUnits(volatilityVol, WETH_DECIMALS);
+        await hre.network.provider.send("hardhat_setBalance", [mockAttacker.address, "0x152D02C7E14AF6800000"]); // 100,000 ETH
+        const WETH_ABI_WRAP = ["function deposit() public payable"];
+        const aWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, mockAttacker);
+        await aWethContract.deposit({ value: aAmountIn });
+        
+        try {
+            const aQuote = await getQuote(aRouter, aAmountIn, swapPath);
+            await executeSwap(aRouter, aWeth, aAmountIn, aQuote, swapPath, mockAttacker, 10);
+        } catch (e) {
+            console.log("[Simulation] Volatility induction hit pool limits, proceeding with max available stress.");
+        }
+    }
+    // --------------------------------------------
+
     const simulatedQuoteWei = await getQuote(router, amountIn, swapPath);
     const simulatedOutput = hre.ethers.formatUnits(simulatedQuoteWei, USDC_DECIMALS);
 

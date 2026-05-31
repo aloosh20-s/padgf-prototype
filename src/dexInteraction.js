@@ -56,7 +56,8 @@ async function executeSwap(router, weth, amountIn, expectedOutput, path, signer,
 
         // Execute
         // Apply slippage percent (e.g. 1% means outMin is 99% of expected output)
-        const amountOutMin = (expectedOutput * BigInt(100 - slippagePercent)) / 100n;
+        const slippageBps = BigInt(Math.floor(slippagePercent * 100));
+        const amountOutMin = (expectedOutput * (10000n - slippageBps)) / 10000n;
 
         const currentBlock = await hre.ethers.provider.getBlock("latest");
         const deadline = currentBlock.timestamp + 1200; // 20 minutes from now

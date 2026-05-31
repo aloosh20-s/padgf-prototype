@@ -1,0 +1,14 @@
+{
+  "scenario": "PADGF Decision Demo",
+  "demo_type": "Delay",
+  "official_thesis_data": false,
+  "exploratory_only": true,
+  "input_amount": "5.0 WETH",
+  "slippage_tolerance": "5%",
+  "risk_score": 0.5,
+  "tau1": 0.3,
+  "tau2": 0.7,
+  "decision": "Delay",
+  "explanation": "Risk score is between tau1 and tau2. Delaying execution for further analysis. PADGF demonstrates threshold-based decision behavior.",
+  "timestamp": "2026-05-31T13:46:54.651Z"
+}
