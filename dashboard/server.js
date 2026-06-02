@@ -47,15 +47,24 @@ const parseBody = (req) => {
 
 const server = http.createServer(async (req, res) => {
     // Static files
-    if (req.method === 'GET' && req.url === '/') {
-        serveStaticFile(res, path.join(__dirname, 'public', 'index.html'), 'text/html');
-    } else if (req.method === 'GET' && req.url === '/style.css') {
-        serveStaticFile(res, path.join(__dirname, 'public', 'style.css'), 'text/css');
-    } else if (req.method === 'GET' && req.url === '/script.js') {
-        serveStaticFile(res, path.join(__dirname, 'public', 'script.js'), 'application/javascript');
+    if (req.method === 'GET' && !req.url.startsWith('/api/')) {
+        let filePath = req.url === '/' ? '/index.html' : req.url;
+        // Prevent directory traversal
+        filePath = path.normalize(filePath).replace(/^(\.\.(\/|\\|$))+/, '');
+        
+        let contentType = 'text/html';
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext === '.css') contentType = 'text/css';
+        else if (ext === '.js') contentType = 'application/javascript';
+        else if (ext === '.png') contentType = 'image/png';
+        else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+        
+        serveStaticFile(res, path.join(__dirname, 'public', filePath), contentType);
+        return;
+    }
 
     // Official thesis results
-    } else if (req.method === 'GET' && req.url === '/api/results') {
+    if (req.method === 'GET' && req.url === '/api/results') {
         const safeRead = (filename) => {
             try { return JSON.parse(fs.readFileSync(path.join(resultsDir, filename))); }
             catch { return null; }
@@ -100,6 +109,53 @@ const server = http.createServer(async (req, res) => {
                 resultData = JSON.parse(fs.readFileSync(path.join(customDir, fileMap[scenario])));
             } catch (e) { /* ignore */ }
 
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, stdout, result: resultData }));
+        });
+
+    // User-Driven Evaluation - Evaluate Stage
+    } else if (req.method === 'POST' && req.url === '/api/run/user-driven-evaluate') {
+        const body = await parseBody(req);
+        const amount = body.amount || '1.0';
+        const slippage = body.slippage || '1';
+
+        const cwd = path.join(__dirname, '..');
+        const envVars = `set CUSTOM_AMOUNT=${amount}&& set CUSTOM_SLIPPAGE=${slippage}&& set DEMO_STAGE=EVALUATE&& `;
+        const cmd = `${envVars}npx hardhat run scripts/user-driven-demo.js --network localhost`;
+
+        exec(cmd, { cwd, shell: 'cmd.exe' }, (error, stdout, stderr) => {
+            if (error) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error.message, stderr }));
+                return;
+            }
+            let resultData = null;
+            try { resultData = JSON.parse(fs.readFileSync(path.join(customDir, 'user_driven_decision_result.json'))); } catch (e) { }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, stdout, result: resultData }));
+        });
+
+    // User-Driven Evaluation - Execute Stage
+    } else if (req.method === 'POST' && req.url === '/api/run/user-driven-execute') {
+        const body = await parseBody(req);
+        const amount = body.amount || '1.0';
+        const slippage = body.slippage || '1';
+        const userAction = body.userAction || 'auto_executed'; // auto_executed, cancelled, continued_despite_warning
+        const executionType = body.executionType || 'normal'; // normal, sandwich, none
+        const gasSpeed = body.gasSpeed || 'standard';
+
+        const cwd = path.join(__dirname, '..');
+        const envVars = `set CUSTOM_AMOUNT=${amount}&& set CUSTOM_SLIPPAGE=${slippage}&& set DEMO_STAGE=EXECUTE&& set DEMO_USER_ACTION=${userAction}&& set DEMO_EXEC_TYPE=${executionType}&& set DEMO_GAS_SPEED=${gasSpeed}&& `;
+        const cmd = `${envVars}npx hardhat run scripts/user-driven-demo.js --network localhost`;
+
+        exec(cmd, { cwd, shell: 'cmd.exe' }, (error, stdout, stderr) => {
+            if (error) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error.message, stderr }));
+                return;
+            }
+            let resultData = null;
+            try { resultData = JSON.parse(fs.readFileSync(path.join(customDir, 'user_driven_decision_result.json'))); } catch (e) { }
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: true, stdout, result: resultData }));
         });

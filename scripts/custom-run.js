@@ -36,6 +36,13 @@ function saveCustomResult(data, filename) {
 
 async function runBaseline() {
     console.log(`[Exploratory Test] Baseline Swap | ${CUSTOM_AMOUNT} WETH | ${CUSTOM_SLIPPAGE}% slippage`);
+    // Reset fork to clean state to prevent accumulated base fee errors
+    await hre.network.provider.send("hardhat_reset", [{
+        forking: {
+            jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+            blockNumber: FORK_BLOCK
+        }
+    }]);
     const signer = await setupProviderAndSigner(IMPERSONATED_ACCOUNT);
     const { weth, usdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, signer);
     const router = await getRouter(ROUTER_ADDRESS, signer);
@@ -92,7 +99,12 @@ async function runSandwich() {
     ]);
     const WETH_ABI_WRAP = ["function deposit() public payable"];
     const attackerWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, attackerSigner);
-    await attackerWethContract.deposit({ value: attackerAmountIn });
+    await attackerWethContract.deposit({ 
+        value: attackerAmountIn,
+        gasLimit: 100000,
+        maxFeePerGas: hre.ethers.parseUnits("300", "gwei"),
+        maxPriorityFeePerGas: hre.ethers.parseUnits("2", "gwei")
+    });
 
     const swapPath = [WETH_ADDRESS, USDC_ADDRESS];
     const reversePath = [USDC_ADDRESS, WETH_ADDRESS];
@@ -179,7 +191,12 @@ async function runProtected() {
         await hre.network.provider.send("hardhat_setBalance", [mockAttacker.address, "0x152D02C7E14AF6800000"]); // 100,000 ETH
         const WETH_ABI_WRAP = ["function deposit() public payable"];
         const aWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, mockAttacker);
-        await aWethContract.deposit({ value: aAmountIn });
+        await aWethContract.deposit({ 
+            value: aAmountIn,
+            gasLimit: 100000,
+            maxFeePerGas: hre.ethers.parseUnits("300", "gwei"),
+            maxPriorityFeePerGas: hre.ethers.parseUnits("2", "gwei")
+        });
         
         try {
             const aQuote = await getQuote(aRouter, aAmountIn, swapPath);
@@ -199,7 +216,7 @@ async function runProtected() {
     const riskMetrics = calculateRisk(referenceOutput, simulatedOutput, gasPriceWei);
     const decisionResult = makeDecision(riskMetrics.normalized_risk_score, { tau1: 0.3, tau2: 0.7 });
 
-    let executionStatus = "Blocked / Delayed";
+    let executionStatus = decisionResult.decision;
     let transactionHash = "";
     let actualOutputWei = 0n;
 

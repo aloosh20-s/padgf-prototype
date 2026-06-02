@@ -30,17 +30,32 @@ async function getQuote(router, amountIn, path) {
     }
 }
 
-async function executeSwap(router, weth, amountIn, expectedOutput, path, signer, slippagePercent = 1) {
+async function executeSwap(router, weth, amountIn, expectedOutput, path, signer, slippagePercent = 1, gasSpeed = "standard") {
     try {
         const routerAddress = await router.getAddress();
         
         // Ensure decimal issues don't crash our calculation
         if (amountIn <= 0n) throw new Error("Amount in must be greater than zero.");
         
+        // Fetch current dynamic network fee
+        const feeData = await hre.ethers.provider.getFeeData();
+        let baseMaxFee = feeData.maxFeePerGas || hre.ethers.parseUnits("50", "gwei");
+        let basePriority = feeData.maxPriorityFeePerGas || hre.ethers.parseUnits("1.5", "gwei");
+        
+        // Apply user-driven multiplier mapping to the fees
+        if (gasSpeed === "fast") {
+            baseMaxFee = (baseMaxFee * 150n) / 100n; // 1.5x
+            basePriority = (basePriority * 200n) / 100n; // 2.0x
+        } else if (gasSpeed === "instant") {
+            baseMaxFee = (baseMaxFee * 250n) / 100n; // 2.5x
+            basePriority = (basePriority * 300n) / 100n; // 3.0x
+        }
+
         // Approve
         const approveTx = await weth.approve(routerAddress, amountIn, {
-            maxFeePerGas: hre.ethers.parseUnits("100", "gwei"),
-            maxPriorityFeePerGas: hre.ethers.parseUnits("2", "gwei")
+            gasLimit: 100000,
+            maxFeePerGas: baseMaxFee,
+            maxPriorityFeePerGas: basePriority
         });
         await approveTx.wait();
 
@@ -70,8 +85,8 @@ async function executeSwap(router, weth, amountIn, expectedOutput, path, signer,
             deadline,
             {
                 gasLimit: 300000,
-                maxFeePerGas: hre.ethers.parseUnits("100", "gwei"),
-                maxPriorityFeePerGas: hre.ethers.parseUnits("2", "gwei")
+                maxFeePerGas: baseMaxFee,
+                maxPriorityFeePerGas: basePriority
             }
         );
 

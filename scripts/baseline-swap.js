@@ -10,6 +10,14 @@ const { formatOutput, saveResult } = require("../src/resultLogger.js");
 async function main() {
     console.log("Starting Baseline Swap Simulation...");
     try {
+        // Reset fork to clean state to prevent accumulated base fee errors
+        await hre.network.provider.send("hardhat_reset", [{
+            forking: {
+                jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+                blockNumber: FORK_BLOCK
+            }
+        }]);
+
         const signer = await setupProviderAndSigner(IMPERSONATED_ACCOUNT);
         console.log(`Impersonated account: ${signer.address}`);
 

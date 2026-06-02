@@ -2,3 +2,10 @@ scenario_name,fork_block,dex,input_token,output_token,input_amount,expected_outp
 Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success
 Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success
 Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3558.483381,3558.483381,108519,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,2399.84678,2399.84678,108519,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,2399.542809,2399.542809,108519,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.05435,3899.05435,108519,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success
+Phase 1 Baseline,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3899.684203,108507,success

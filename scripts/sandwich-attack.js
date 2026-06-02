@@ -10,6 +10,14 @@ const { formatOutput, saveResult } = require("../src/resultLogger.js");
 async function main() {
     console.log("Starting Phase 2 Sandwich Attack Simulation...");
     try {
+        // Reset fork to clean state to prevent accumulated base fee errors
+        await hre.network.provider.send("hardhat_reset", [{
+            forking: {
+                jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+                blockNumber: FORK_BLOCK
+            }
+        }]);
+
         // 1. Setup victim (the impersonated whale) and the attacker
         const victimSigner = await setupProviderAndSigner(IMPERSONATED_ACCOUNT);
         console.log(`Victim account: ${victimSigner.address}`);
@@ -45,7 +53,12 @@ async function main() {
         // Wrap 5.0 ETH into WETH
         const WETH_ABI_WRAP = ["function deposit() public payable"];
         const attackerWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, attackerSigner);
-        await attackerWethContract.deposit({ value: attackerAmountIn });
+        await attackerWethContract.deposit({ 
+            value: attackerAmountIn,
+            gasLimit: 100000,
+            maxFeePerGas: hre.ethers.parseUnits("300", "gwei"),
+            maxPriorityFeePerGas: hre.ethers.parseUnits("2", "gwei")
+        });
         console.log(`Funded Attacker with ${attackerAmountInEth} WETH via deposit`);
 
         const path = [WETH_ADDRESS, USDC_ADDRESS];

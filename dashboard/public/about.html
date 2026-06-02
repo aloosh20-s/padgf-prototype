@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PADGF - About Us</title>
+    <link rel="stylesheet" href="main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="about-page">
+    <nav class="top-nav">
+        <div class="nav-brand">PADGF<span style="color:#38bdf8;">.</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="about.html" class="nav-link active">About Us</a>
+            <a href="thesis.html" class="nav-link">Thesis Scenario</a>
+            <a href="custom.html" class="nav-link">Custom Test</a>
+            <a href="user-driven.html" class="nav-link">Realistic Demo</a>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>About the Project</h1>
+        <p class="subtitle">Research & Engineering Team</p>
+
+        <div class="glass-panel" style="margin-bottom: 40px;">
+            <h2>PADGF Project Purpose & Context</h2>
+            <p>The PreSend Adaptive Decision Guard Framework (PADGF) was engineered as a comprehensive research objective examining and developing a robust pre-broadcast client-side methodology for preventing Maximum Extractable Value (MEV) exploitation, primarily Sandwich Attacks in Decentralized Finance (DeFi).</p>
+            <p>By simulating transaction executions natively against a localized mempool fork state before they are ever widely broadcast sequentially, PADGF computationally identifies slippage deviations, gas sensitivities, and price-impact volatility in heavily dynamic liquidity pools. The algorithm then parses these risk vectors into a normalized score, evaluating whether executing the transaction is statistically sound against predetermined mathematical thresholds (tau), generating an automated or recommended protective posture.</p>
+        </div>
+
+        <div class="glass-panel">
+            <h2>Our Team Members</h2>
+            <div class="team-grid">
+                <!-- Member 1 -->
+                <div class="team-card">
+                    <label class="img-upload-label" title="Click to upload picture">
+                        <div class="team-img-placeholder" id="member-img-1">Photo</div>
+                        <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event, 1)">
+                    </label>
+                    <h4>Alaa Saleh</h4>
+                    <p class="team-extra" id="member-bio-1" contenteditable="true" oninput="saveBio(1)">Click to add info/bio...</p>
+                </div>
+                <!-- Member 2 -->
+                <div class="team-card">
+                    <label class="img-upload-label" title="Click to upload picture">
+                        <div class="team-img-placeholder" id="member-img-2">Photo</div>
+                        <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event, 2)">
+                    </label>
+                    <h4>Abd Al_Hakeem</h4>
+                    <p class="team-extra" id="member-bio-2" contenteditable="true" oninput="saveBio(2)">Click to add info/bio...</p>
+                </div>
+                <!-- Member 3 -->
+                <div class="team-card">
+                    <label class="img-upload-label" title="Click to upload picture">
+                        <div class="team-img-placeholder" id="member-img-3">Photo</div>
+                        <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event, 3)">
+                    </label>
+                    <h4>Anas Fahly</h4>
+                    <p class="team-extra" id="member-bio-3" contenteditable="true" oninput="saveBio(3)">Click to add info/bio...</p>
+                </div>
+                <!-- Member 4 -->
+                <div class="team-card">
+                    <label class="img-upload-label" title="Click to upload picture">
+                        <div class="team-img-placeholder" id="member-img-4">Photo</div>
+                        <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event, 4)">
+                    </label>
+                    <h4>AbdAlazez Alshrmany</h4>
+                    <p class="team-extra" id="member-bio-4" contenteditable="true" oninput="saveBio(4)">Click to add info/bio...</p>
+                </div>
+                <!-- Member 5 -->
+                <div class="team-card">
+                    <label class="img-upload-label" title="Click to upload picture">
+                        <div class="team-img-placeholder" id="member-img-5">Photo</div>
+                        <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event, 5)">
+                    </label>
+                    <h4>Ammar Al-ward</h4>
+                    <p class="team-extra" id="member-bio-5" contenteditable="true" oninput="saveBio(5)">Click to add info/bio...</p>
+                </div>
+                <!-- Member 6 -->
+                <div class="team-card">
+                    <label class="img-upload-label" title="Click to upload picture">
+                        <div class="team-img-placeholder" id="member-img-6">Photo</div>
+                        <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event, 6)">
+                    </label>
+                    <h4>Mohammed Ameen</h4>
+                    <p class="team-extra" id="member-bio-6" contenteditable="true" oninput="saveBio(6)">Click to add info/bio...</p>
+                </div>
+                <!-- Member 7 -->
+                <div class="team-card">
+                    <label class="img-upload-label" title="Click to upload picture">
+                        <div class="team-img-placeholder" id="member-img-7">Photo</div>
+                        <input type="file" accept="image/*" style="display:none" onchange="uploadPhoto(event, 7)">
+                    </label>
+                    <h4>Amro Alagbry</h4>
+                    <p class="team-extra" id="member-bio-7" contenteditable="true" oninput="saveBio(7)">Click to add info/bio...</p>
+                </div>
+            </div>
+            <p class="team-note">Note: You can replace the photo placeholders and edit the text directly to add extra information. Changes save locally.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', loadTeamData);
+    </script>
+</body>
+</html>

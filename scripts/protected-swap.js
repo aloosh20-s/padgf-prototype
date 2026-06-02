@@ -13,6 +13,14 @@ async function main() {
     console.log("Starting Phase 3: PADGF Protected Swap...");
     
     try {
+        // Reset fork to clean state to prevent accumulated base fee errors
+        await hre.network.provider.send("hardhat_reset", [{
+            forking: {
+                jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+                blockNumber: FORK_BLOCK
+            }
+        }]);
+
         const signer = await setupProviderAndSigner(IMPERSONATED_ACCOUNT);
         console.log(`User account: ${signer.address}`);
 
@@ -52,7 +60,7 @@ async function main() {
         console.log(`PADGF Decision: [${decisionResult.decision}]`);
         console.log(`Reasoning: ${decisionResult.reason}`);
 
-        let executionStatus = "Blocked / Delayed";
+        let executionStatus = decisionResult.decision;
         let transactionHash = "";
         let actualOutputWei = 0n;
 

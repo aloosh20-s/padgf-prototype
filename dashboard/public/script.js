@@ -25,8 +25,9 @@ function truncateHash(hash) {
 }
 
 function renderTable(data) {
-    const tbody = document.querySelector("#results-table tbody");
-    tbody.innerHTML = "";
+    const tableBody = document.querySelector("#results-table tbody");
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
 
     const { baseline, sandwich } = data;
     const prot = data.protected;
@@ -66,7 +67,7 @@ function renderTable(data) {
             ${generateCell(sandwich, m)}
             ${generateCell(prot, m)}
         `;
-        tbody.appendChild(tr);
+        tableBody.appendChild(tr);
     });
 }
 
@@ -238,20 +239,23 @@ function renderCustomResult(result) {
 
     rows.forEach(([label, value]) => {
         const tr = document.createElement("tr");
-        let cls = "";
-        if (value === "success" || value === "Execute" || value === "true") cls = "status-success";
-        else if (value === "Block" || value === "false") cls = "status-error";
-        else if (value === "Delay") cls = 'style="color:#d35400; font-weight:bold;"';
+        if (value === "Delay") {
+            tr.innerHTML = `<td class="metric-name">${label}</td><td><span style="color:#d35400; font-weight:bold;">${value}</span></td>`;
+        } else {
+            let cls = "";
+            if (value === "success" || value === "Execute" || value === "true") cls = "status-success";
+            else if (value === "Block" || value === "false" || (String(label).includes("Victim Loss") && parseFloat(value) > 0)) cls = "status-error";
 
-        tr.innerHTML = `<td class="metric-name">${label}</td><td><span class="${cls}">${value}</span></td>`;
+            tr.innerHTML = `<td class="metric-name">${label}</td><td><span class="${cls}">${value}</span></td>`;
+        }
         tbody.appendChild(tr);
     });
 
     renderCustomChart(result);
 }
 
-function renderCustomChart(result) {
-    const chartContainer = document.getElementById("custom-bar-chart");
+function renderCustomChart(result, targetId = "custom-bar-chart") {
+    const chartContainer = document.getElementById(targetId);
     if (!chartContainer) return;
     chartContainer.innerHTML = '';
 
@@ -278,6 +282,16 @@ function renderCustomChart(result) {
             parseFloat(result.simulated_output || 0),
             parseFloat(result.actual_output || result.simulated_output || 0)
         ];
+    } else if (result.run_type && result.run_type.includes("User-Driven")) {
+        labels = ["Reference", "Simulated"];
+        values = [
+            parseFloat(result.reference_output || 0),
+            parseFloat(result.simulated_output || 0)
+        ];
+        if (result.actual_output) {
+            labels.push("Actual Final");
+            values.push(parseFloat(result.actual_output));
+        }
     } else {
         // Fallback generic plotting
         if (result.expected_output) { labels.push("Expected"); values.push(parseFloat(result.expected_output)); }
@@ -310,8 +324,198 @@ function renderCustomChart(result) {
     chartContainer.innerHTML = innerHTML;
 }
 
-// =================== INIT ===================
-window.onload = fetchResults;
+// =================== SECTION 3: USER-DRIVEN EXPLORATORY MODE ===================
+
+let currentUdContext = null;
+
+async function runUserDrivenEvaluate() {
+    const amount = document.getElementById("ud-amount").value;
+    const slippage = document.getElementById("ud-slippage").value;
+    const btn = document.getElementById("btn-ud-run");
+    
+    btn.disabled = true;
+    btn.textContent = "Evaluating...";
+    document.getElementById("ud-warning-panel").style.display = "none";
+    document.getElementById("ud-result-panel").style.display = "none";
+    
+    updateConsole("ud-console", `[Exploratory Mode] Evaluating | Input: ${amount} WETH | Slippage: ${slippage}%...`);
+
+    try {
+        const response = await fetch('/api/run/user-driven-evaluate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount, slippage })
+        });
+        const data = await response.json();
+        
+        if (data.stdout) updateConsole("ud-console", `[EVALUATION OUTPUT]\n\n${data.stdout}`);
+        if (data.error) updateConsole("ud-console", `[ERROR]\n\n${data.error}\n${data.stderr || ''}`);
+
+        if (data.result) {
+            currentUdContext = { amount, slippage, risk_level: data.result.risk_level };
+            
+            const riskLevel = data.result.risk_level;
+            const rec = data.result.padgf_recommendation;
+            
+            const wp = document.getElementById("ud-warning-panel");
+            const wText = document.getElementById("ud-warning-text");
+            const aText = document.getElementById("ud-assessment-text");
+            const rText = document.getElementById("ud-recommendation-text");
+            
+            const score = data.result.normalized_risk_score;
+            const rScoreText = document.getElementById("ud-risk-score-text");
+            rScoreText.textContent = `Calculated Risk Score: ${parseFloat(score).toFixed(4)}`;
+            
+            const gasCostEth = data.result.estimated_gas_cost_eth;
+            const gasGwei = parseFloat(data.result.estimated_gas_price_gwei).toFixed(2);
+            document.getElementById("ud-gas-cost-text").textContent = `Estimated Gas Cost: ~${parseFloat(gasCostEth).toFixed(5)} ETH (${gasGwei} Gwei)`;
+            
+            let badgeColor = "#2ecc71";
+            if (riskLevel === "Moderate") badgeColor = "#f39c12";
+            if (riskLevel === "High") badgeColor = "#e74c3c";
+            
+            aText.innerHTML = `PADGF Assessment: <span style="color:${badgeColor}">${riskLevel} Risk</span>`;
+            rText.textContent = `Recommendation: ${rec}`;
+            rText.style.color = badgeColor;
+            
+            if (riskLevel === "Low") {
+                updateConsole("ud-console", "[Exploratory Mode] Low Risk. Auto-executing...");
+                await udUserDecision('auto', 'auto_executed');
+            } else if (riskLevel === "Moderate") {
+                wText.textContent = "Warning: This transaction has been classified as moderate risk.";
+                wp.style.borderColor = badgeColor;
+                wp.style.display = "block";
+                updateConsole("ud-console", "[Exploratory Mode] Moderate Risk. Waiting for user decision...");
+            } else if (riskLevel === "High") {
+                wText.textContent = "Warning: PADGF has identified high-risk transaction conditions that may expose the swap to sandwich attack behavior. Continuing may result in reduced output or financial loss. Do you want to continue?";
+                wp.style.borderColor = badgeColor;
+                wp.style.display = "block";
+                updateConsole("ud-console", "[Exploratory Mode] High Risk. Waiting for user decision...");
+            }
+        }
+    } catch (e) {
+        updateConsole("ud-console", "Evaluation Failure: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Run User-Driven PADGF Evaluation";
+    }
+}
+
+async function udUserDecision(choice, autoActionOverride = null) {
+    let userAction = autoActionOverride;
+    let executionType = "none";
+    
+    if (choice === 'cancel') {
+        userAction = "cancelled";
+        executionType = "none";
+        document.getElementById("ud-warning-panel").style.display = "none";
+        updateConsole("ud-console", "[Exploratory Mode] User cancelled the transaction.");
+    } else if (choice === 'continue') {
+        if (currentUdContext.risk_level === "High") {
+            userAction = "accepted_high_warning";
+            executionType = "sandwich";
+        } else {
+            userAction = "accepted_delay_warning";
+            executionType = "normal";
+        }
+        document.getElementById("ud-warning-panel").style.display = "none";
+        updateConsole("ud-console", `[Exploratory Mode] User continued despite ${currentUdContext.risk_level} risk warning. Attempting execution...`);
+    } else if (choice === 'auto') {
+        userAction = "auto_executed";
+        executionType = "normal";
+    }
+    
+    // Disable main button while running
+    const btn = document.getElementById("btn-ud-run");
+    btn.disabled = true;
+    
+    // Read gas speed override
+    const gasSpeedEl = document.getElementById("ud-gas-speed");
+    let gasSpeed = gasSpeedEl ? gasSpeedEl.value : "standard";
+    if (choice === 'auto') gasSpeed = "standard"; // Safety fallback for automated executions
+    
+    try {
+        const response = await fetch('/api/run/user-driven-execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: currentUdContext.amount,
+                slippage: currentUdContext.slippage,
+                userAction,
+                executionType,
+                gasSpeed
+            })
+        });
+        const data = await response.json();
+        
+        if (data.stdout && choice !== 'cancel') updateConsole("ud-console", `[EXECUTION OUTPUT]\n\n${data.stdout}`);
+        
+        if (data.result) {
+            renderUdResult(data.result);
+        }
+    } catch (e) {
+        updateConsole("ud-console", "Execution Failure: " + e.message);
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function renderUdResult(result) {
+    const panel = document.getElementById("ud-result-panel");
+    const tbody = document.querySelector("#ud-result-table tbody");
+    tbody.innerHTML = "";
+    panel.style.display = "block";
+    
+    const rows = [
+        ["Run Type", result.run_type],
+        ["Output Artifact", result.output_artifact],
+        ["Input Amount", `${result.input_amount} WETH`],
+        ["Slippage Tolerance", result.slippage_tolerance],
+        ["Reference Output", `${parseFloat(result.reference_output).toFixed(6)} USDC`],
+        ["Simulated Output", `${parseFloat(result.simulated_output).toFixed(6)} USDC`]
+    ];
+    
+    if (result.actual_output) rows.push(["Actual Output", `${parseFloat(result.actual_output).toFixed(6)} USDC`]);
+    if (result.baseline_output) rows.push(["Baseline Output", `${parseFloat(result.baseline_output).toFixed(6)} USDC`]);
+    if (result.victim_output_loss) rows.push(["Victim Output Loss", `${result.victim_output_loss} USDC`]);
+    if (result.financial_loss_percentage) rows.push(["Financial Loss Percentage", result.financial_loss_percentage]);
+    
+    rows.push(
+        ["Slippage Deviation", `${result.slippage_deviation}%`],
+        ["Price Impact", `${result.price_impact}%`],
+        ["Gas Sensitivity", result.gas_sensitivity],
+        ["Applied Gas Speed Multiplier", result.gas_speed_applied || "Standard (Base Fee)"],
+        ["Normalized Risk Score", result.normalized_risk_score],
+        ["Thresholds", `tau1 = ${result.tau1}, tau2 = ${result.tau2}`],
+        ["PADGF Risk Level", result.risk_level],
+        ["PADGF Recommendation", result.padgf_recommendation],
+        ["User Action", result.user_action],
+        ["Execution Allowed", result.execution_allowed.toString()],
+        ["Final Status", result.execution_status]
+    );
+
+    rows.forEach(([label, value]) => {
+        const tr = document.createElement("tr");
+        let styledValue = value;
+        
+        if (label === "PADGF Risk Level" || label === "PADGF Recommendation" || label === "Final Status" || label === "User Action") {
+            let cls = "";
+            if (value.includes("Low") || value.includes("Execute") || value === "executed_low_risk" || value === "auto_executed") cls = "status-success";
+            else if (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning") cls = "status-pending"; // generic yellow/orange
+            else if (value.includes("High") || value.includes("Block") || value === "accepted_high_warning" || value === "executed_after_high_risk_warning" || value === "continued_despite_warning" || value === "executed_after_warning") cls = "status-error";
+            else if (value.includes("cancel")) cls = "status-pending"; // gray or default
+            
+            styledValue = `<span class="${cls}" ${cls === "status-pending" && (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning" || value === "continued_despite_warning" || value === "executed_after_warning") ? 'style="color:#d35400; font-weight:bold;"' : ''}>${value}</span>`;
+            if (value.includes("cancel")) styledValue = `<span style="color:#7f8c8d; font-weight:bold;">${value}</span>`;
+        }
+        
+        tr.innerHTML = `<td class="metric-name">${label}</td><td>${styledValue}</td>`;
+        tbody.appendChild(tr);
+    });
+    
+    renderCustomChart(result, "ud-bar-chart");
+}
+
 
 // =================== SECTION 3: ABOUT MODAL & PERSISTENCE ===================
 function openAboutModal() {

@@ -1,3 +1,7 @@
 scenario_name,fork_block,dex,input_token,output_token,victim_input_amount,baseline_expected_output,attacked_actual_output,victim_output_loss,financial_loss_percentage,attacker_gas_used,status
 Phase 2 Sandwich Attack,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3896.536466,3.147737,0.08%,243827,success
 Phase 2 Sandwich Attack,19400000,Uniswap V2,WETH,USDC,1.0,3557.934391,3555.191349,2.743042,0.08%,231527,success
+Phase 2 Sandwich Attack,19400000,Uniswap V2,WETH,USDC,1.0,2399.238896,2397.720194,1.518702,0.06%,243827,success
+Phase 2 Sandwich Attack,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3896.536466,3.147737,0.08%,243827,success
+Phase 2 Sandwich Attack,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3896.536466,3.147737,0.08%,243827,success
+Phase 2 Sandwich Attack,19400000,Uniswap V2,WETH,USDC,1.0,3899.684203,3896.536466,3.147737,0.08%,243827,success

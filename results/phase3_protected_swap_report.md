@@ -19,7 +19,7 @@
 - **Thresholds Used:** tau1 = 0.3, tau2 = 0.7
 - **Decision:** **Execute**
 - **Execution Allowed:** true
-- **Transaction Hash:** 0x4960151423a563f06bf017ae28f9c3db41e9e0bf66fc4365d235d8311cfa8322
+- **Transaction Hash:** 0xbcaac96d1e553f0a5eb80432542280bcdbee69b88e22b5ce87d7e1aba08ea23a
 
 ### Interpretation
 The PADGF risk evaluator successfully modeled the pre-broadcast transaction parameters before the transaction enters the public mempool. By analyzing slippage deviation, gas sensitivity, and potential price impact, it derived a normalized risk score of 0.0750. Evaluated against the threshold set points, the decision engine determined the transaction should result in: **Execute**. 

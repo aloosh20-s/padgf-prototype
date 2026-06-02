@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PADGF - User Driven</title>
+    <link rel="stylesheet" href="main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="user-page">
+    <nav class="top-nav">
+        <div class="nav-brand">PADGF<span style="color:#38bdf8;">.</span></div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="about.html" class="nav-link">About Us</a>
+            <a href="thesis.html" class="nav-link">Thesis Scenario</a>
+            <a href="custom.html" class="nav-link">Custom Test</a>
+            <a href="user-driven.html" class="nav-link active">Realistic Demo</a>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>3. Realistic User-Driven Evaluation</h1>
+        <p class="subtitle">Exploratory Mode — Not Official Chapter 4 Data</p>
+
+        <div class="glass-panel">
+            <div class="custom-note" style="border-left-color: #ef4444; border-top-color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important;">
+                <strong style="color: #ef4444;">Warning:</strong> This mode demonstrates a possible wallet-style user decision process. PADGF calculates the transaction risk and provides a recommendation, but the final user choice is computationally executed. Results from this mode are not part of the official Chapter 4 evaluation dataset.
+            </div>
+            
+            <div class="custom-panel">
+                <div class="custom-form">
+                    <div class="form-group">
+                        <label>Input Amount (WETH)</label>
+                        <select id="ud-amount">
+                            <option value="1" selected>1 WETH</option>
+                            <option value="2">2 WETH</option>
+                            <option value="5">5 WETH</option>
+                            <option value="10">10 WETH</option>
+                            <option value="25">25 WETH</option>
+                            <option value="50">50 WETH</option>
+                            <option value="100">100 WETH</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Slippage Tolerance</label>
+                        <select id="ud-slippage">
+                            <option value="0.5">0.5%</option>
+                            <option value="1" selected>1%</option>
+                            <option value="2">2%</option>
+                            <option value="5">5%</option>
+                            <option value="10">10%</option>
+                        </select>
+                    </div>
+                    <div class="form-group gas-controls">
+                        <label>Gas Priority Strategy</label>
+                        <select id="ud-gas-speed">
+                            <option value="standard">Standard (Base Fee)</option>
+                            <option value="fast">Fast (1.5x Multiplier)</option>
+                            <option value="instant">Instant (2.5x Multiplier)</option>
+                        </select>
+                        <p id="ud-gas-cost-text" style="font-size: 13px; margin-top: 12px; margin-bottom: 0; color: #38bdf8; text-align: left;">Est. Gas: Pending Eval...</p>
+                    </div>
+                </div>
+                <button id="btn-ud-run" onclick="runUserDrivenEvaluate()">Run User-Driven PADGF Evaluation</button>
+            </div>
+
+            <div id="ud-warning-panel" class="ud-warning-panel" style="display:none;">
+                <h3 id="ud-assessment-text" style="margin-top:0;">PADGF Assessment: </h3>
+                <p id="ud-recommendation-text" style="font-weight: bold; margin-bottom: 8px;"></p>
+                <p id="ud-risk-score-text" style="font-size: 13px; margin-bottom: 12px; opacity: 0.85;"></p>
+                <p id="ud-warning-text" style="margin-bottom: 20px; font-size: 14px;"></p>
+                <div class="ud-controls" id="ud-controls">
+                    <button id="btn-ud-cancel" onclick="udUserDecision('cancel')" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">Cancel Transaction</button>
+                    <button id="btn-ud-continue" class="secondary" onclick="udUserDecision('continue')">Continue Transaction</button>
+                </div>
+            </div>
+
+            <div class="console-container" style="margin-top: 30px;">
+                <h3>Evaluation Console</h3>
+                <div id="ud-console" class="console">Ready. Configure parameters and run user-driven evaluation.</div>
+            </div>
+
+            <div id="ud-result-panel" class="custom-result-panel" style="display:none;">
+                <h3>Exploratory Final Result</h3>
+                <table id="ud-result-table">
+                    <thead>
+                        <tr>
+                            <th width="35%">Metric</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="chart-container" style="margin-top: 30px;">
+                    <h3>Final Output Comparison</h3>
+                    <div id="ud-bar-chart" class="bar-chart">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
