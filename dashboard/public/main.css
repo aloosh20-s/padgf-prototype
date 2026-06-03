@@ -21,16 +21,53 @@ body {
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    background-blend-mode: overlay;
     -webkit-font-smoothing: antialiased;
 }
 
-/* Page Specific Backgrounds */
-body.home-page { background-image: linear-gradient(rgba(10, 15, 25, 0.7), rgba(10, 15, 25, 0.9)), url('images/home.png'); }
-body.thesis-page { background-image: linear-gradient(rgba(10, 15, 25, 0.75), rgba(10, 15, 25, 0.9)), url('images/thesis.png'); }
-body.custom-page { background-image: linear-gradient(rgba(10, 15, 25, 0.8), rgba(10, 15, 25, 0.9)), url('images/custom.png'); }
-body.user-page { background-image: linear-gradient(rgba(10, 15, 25, 0.8), rgba(10, 15, 25, 0.9)), url('images/user_driven.png'); }
-body.about-page { background-image: linear-gradient(rgba(10, 15, 25, 0.75), rgba(10, 15, 25, 0.9)), url('images/about.png'); }
+/* Page Specific Backgrounds - Dark Mode (Default) */
+/* We lowered the rgba opacity from 0.9 to 0.4-0.6 so the images are actually visible! */
+body.home-page { background-image: linear-gradient(rgba(10, 15, 25, 0.5), rgba(10, 15, 25, 0.7)), url('images/home.png'); }
+body.thesis-page { background-image: linear-gradient(rgba(10, 15, 25, 0.5), rgba(10, 15, 25, 0.7)), url('images/thesis.png'); }
+body.custom-page { background-image: linear-gradient(rgba(10, 15, 25, 0.5), rgba(10, 15, 25, 0.7)), url('images/custom.png'); }
+body.user-page { background-image: linear-gradient(rgba(10, 15, 25, 0.5), rgba(10, 15, 25, 0.7)), url('images/user_driven.png'); }
+body.about-page { background-image: linear-gradient(rgba(10, 15, 25, 0.5), rgba(10, 15, 25, 0.7)), url('images/about.png'); }
+
+/* Light Mode Override (Automatically applies if user OS is in Light Theme) */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-dark: #f8fafc;
+        --text-main: #1e293b;
+        --text-muted: #475569;
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(0, 0, 0, 0.1);
+        --primary-glow: rgba(56, 189, 248, 0.3);
+    }
+
+    body { color: var(--text-main); }
+    
+    /* Lighter gradients for the background images so they are visible in Light Mode */
+    body.home-page { background-image: linear-gradient(rgba(248, 250, 252, 0.6), rgba(248, 250, 252, 0.8)), url('images/home.png'); }
+    body.thesis-page { background-image: linear-gradient(rgba(248, 250, 252, 0.6), rgba(248, 250, 252, 0.8)), url('images/thesis.png'); }
+    body.custom-page { background-image: linear-gradient(rgba(248, 250, 252, 0.6), rgba(248, 250, 252, 0.8)), url('images/custom.png'); }
+    body.user-page { background-image: linear-gradient(rgba(248, 250, 252, 0.6), rgba(248, 250, 252, 0.8)), url('images/user_driven.png'); }
+    body.about-page { background-image: linear-gradient(rgba(248, 250, 252, 0.6), rgba(248, 250, 252, 0.8)), url('images/about.png'); }
+
+    /* Light Mode Typography & Color Fixes */
+    h1, h2, h3, .nav-brand, .hero-title, .status-success, .status-error, .status-pending, th, .card-title, .team-card h4, .bar-value { border-color: rgba(0,0,0,0.1); color: #0f172a; text-shadow: none; }
+    .hero-title { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-text .subtitle, .subtitle, td, .card-desc, .team-extra { color: #334155; }
+    .nav-link { color: #475569; }
+    .nav-link:hover, .nav-link.active { color: #0284c7; text-shadow: none; border-bottom-color: #0284c7; }
+    .top-nav { background: rgba(248, 250, 252, 0.7); }
+    .console-container { background: rgba(255, 255, 255, 0.6); }
+    .console { background: #f1f5f9; color: #166534; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+    table { background: rgba(255, 255, 255, 0.6); }
+    th { background: rgba(0,0,0,0.04); }
+    td, .team-extra { border-color: rgba(0,0,0,0.05); }
+    .form-group select { background: rgba(255,255,255,0.8); color: #0f172a; border: 1px solid rgba(0,0,0,0.2); }
+    .form-group select:focus { border-color: #0284c7; }
+    .config-tag { background: rgba(0,0,0,0.05); color: #0f172a; border-color: rgba(0,0,0,0.1); }
+}
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
