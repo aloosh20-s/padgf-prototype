@@ -160,6 +160,64 @@ const server = http.createServer(async (req, res) => {
             res.end(JSON.stringify({ success: true, stdout, result: resultData }));
         });
 
+    // Fetch live gas prices from the Hardhat node
+    } else if (req.method === 'GET' && req.url === '/api/gas-prices') {
+        const cwd = path.join(__dirname, '..');
+        // Use a small inline script to read fee data from the provider
+        const inlineScript = `
+            const hre = require("hardhat");
+            async function main() {
+                const feeData = await hre.ethers.provider.getFeeData();
+                const gasPrice = feeData.gasPrice || feeData.maxFeePerGas || hre.ethers.parseUnits("50", "gwei");
+                const baseGwei = parseFloat(hre.ethers.formatUnits(gasPrice, "gwei"));
+                const swapGasUnits = 150000;
+                const tiers = {
+                    standard: { gwei: baseGwei.toFixed(2), multiplier: "1.0x", totalWei: gasPrice * BigInt(swapGasUnits), totalEth: parseFloat(hre.ethers.formatEther(gasPrice * BigInt(swapGasUnits))).toFixed(6) },
+                    fast: { gwei: (baseGwei * 1.5).toFixed(2), multiplier: "1.5x", totalWei: ((gasPrice * 150n) / 100n) * BigInt(swapGasUnits), totalEth: parseFloat(hre.ethers.formatEther(((gasPrice * 150n) / 100n) * BigInt(swapGasUnits))).toFixed(6) },
+                    instant: { gwei: (baseGwei * 2.5).toFixed(2), multiplier: "2.5x", totalWei: ((gasPrice * 250n) / 100n) * BigInt(swapGasUnits), totalEth: parseFloat(hre.ethers.formatEther(((gasPrice * 250n) / 100n) * BigInt(swapGasUnits))).toFixed(6) }
+                };
+                // BigInt serialization
+                const output = {
+                    standard: { gwei: tiers.standard.gwei, multiplier: tiers.standard.multiplier, totalEth: tiers.standard.totalEth },
+                    fast: { gwei: tiers.fast.gwei, multiplier: tiers.fast.multiplier, totalEth: tiers.fast.totalEth },
+                    instant: { gwei: tiers.instant.gwei, multiplier: tiers.instant.multiplier, totalEth: tiers.instant.totalEth },
+                    baseGwei: baseGwei.toFixed(2),
+                    swapGasUnits
+                };
+                console.log(JSON.stringify(output));
+            }
+            main();
+        `;
+        const tmpFile = path.join(cwd, 'scripts', '_tmp_gas_check.js');
+        fs.writeFileSync(tmpFile, inlineScript);
+        const cmd = `npx hardhat run scripts/_tmp_gas_check.js --network localhost`;
+        exec(cmd, { cwd }, (error, stdout, stderr) => {
+            try { fs.unlinkSync(tmpFile); } catch(e) {}
+            if (error) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error.message }));
+                return;
+            }
+            try {
+                // Extract the JSON line from stdout (skip Hardhat compilation noise)
+                const lines = stdout.trim().split('\n');
+                const jsonLine = lines.find(l => l.startsWith('{'));
+                const parsed = JSON.parse(jsonLine);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(parsed));
+            } catch (e) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                // Fallback with default values
+                res.end(JSON.stringify({
+                    standard: { gwei: "1.00", multiplier: "1.0x", totalEth: "0.000150" },
+                    fast: { gwei: "1.50", multiplier: "1.5x", totalEth: "0.000225" },
+                    instant: { gwei: "2.50", multiplier: "2.5x", totalEth: "0.000375" },
+                    baseGwei: "1.00",
+                    swapGasUnits: 150000
+                }));
+            }
+        });
+
     // Read latest custom results
     } else if (req.method === 'GET' && req.url === '/api/custom-results') {
         const safeRead = (filename) => {

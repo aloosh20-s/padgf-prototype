@@ -211,6 +211,8 @@ async function run() {
             
             if (DEMO_USER_ACTION === "auto_executed") {
                 result.execution_status = "executed_low_risk";
+            } else if (DEMO_USER_ACTION === "delayed_then_executed") {
+                result.execution_status = "executed_after_30s_delay";
             } else if (DEMO_USER_ACTION === "accepted_delay_warning") {
                 result.execution_status = "executed_after_delay_warning";
             } else if (DEMO_USER_ACTION === "accepted_high_warning") {

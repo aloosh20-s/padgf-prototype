@@ -327,9 +327,83 @@ function renderCustomChart(result, targetId = "custom-bar-chart") {
 // =================== SECTION 3: USER-DRIVEN EXPLORATORY MODE ===================
 
 let currentUdContext = null;
+let cachedGasPrices = null;
+
+async function fetchGasPrices() {
+    try {
+        const response = await fetch('/api/gas-prices');
+        const data = await response.json();
+        cachedGasPrices = data;
+        updateGasDropdown(data);
+    } catch (e) {
+        console.warn('Gas price fetch failed, using defaults');
+        // Populate with fallback values
+        const fallback = {
+            standard: { gwei: '1.00', totalEth: '0.000150' },
+            fast: { gwei: '1.50', totalEth: '0.000225' },
+            instant: { gwei: '2.50', totalEth: '0.000375' },
+            swapGasUnits: 150000
+        };
+        cachedGasPrices = fallback;
+        updateGasDropdown(fallback);
+    }
+}
+
+function updateGasDropdown(data) {
+    const stdOpt = document.getElementById('gas-opt-standard');
+    const fastOpt = document.getElementById('gas-opt-fast');
+    const instOpt = document.getElementById('gas-opt-instant');
+    if (stdOpt) stdOpt.textContent = `${data.standard.gwei} Gwei — ~${data.standard.totalEth} ETH`;
+    if (fastOpt) fastOpt.textContent = `${data.fast.gwei} Gwei — ~${data.fast.totalEth} ETH (1.5×)`;
+    if (instOpt) instOpt.textContent = `${data.instant.gwei} Gwei — ~${data.instant.totalEth} ETH (2.5×)`;
+    
+    // Update the cost text below the dropdown
+    updateGasCostText();
+}
+
+function updateGasCostText() {
+    const gasSpeedEl = document.getElementById('ud-gas-speed');
+    const gasCostText = document.getElementById('ud-gas-cost-text');
+    if (!gasSpeedEl || !gasCostText || !cachedGasPrices) return;
+    
+    const selected = gasSpeedEl.value;
+    const tier = cachedGasPrices[selected];
+    if (tier) {
+        gasCostText.textContent = `Selected: ${tier.gwei} Gwei | Estimated Swap Cost: ~${tier.totalEth} ETH`;
+    }
+}
+
+// Listen for dropdown changes to update the cost text
+document.addEventListener('DOMContentLoaded', function() {
+    const gasSpeedEl = document.getElementById('ud-gas-speed');
+    if (gasSpeedEl) {
+        gasSpeedEl.addEventListener('change', updateGasCostText);
+    }
+
+    // Toggle custom input field visibility
+    const amountEl = document.getElementById("ud-amount");
+    const amountCustomEl = document.getElementById("ud-amount-custom");
+    if (amountEl && amountCustomEl) {
+        amountEl.addEventListener("change", function() {
+            if (this.value === "other") {
+                amountCustomEl.style.display = "block";
+                amountCustomEl.focus();
+            } else {
+                amountCustomEl.style.display = "none";
+            }
+        });
+    }
+});
 
 async function runUserDrivenEvaluate() {
-    const amount = document.getElementById("ud-amount").value;
+    let amount = document.getElementById("ud-amount").value;
+    if (amount === "other") {
+        amount = document.getElementById("ud-amount-custom").value;
+        if (!amount || isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid numeric amount greater than 0.");
+            return;
+        }
+    }
     const slippage = document.getElementById("ud-slippage").value;
     const btn = document.getElementById("btn-ud-run");
     
@@ -368,7 +442,16 @@ async function runUserDrivenEvaluate() {
             
             const gasCostEth = data.result.estimated_gas_cost_eth;
             const gasGwei = parseFloat(data.result.estimated_gas_price_gwei).toFixed(2);
-            document.getElementById("ud-gas-cost-text").textContent = `Estimated Gas Cost: ~${parseFloat(gasCostEth).toFixed(5)} ETH (${gasGwei} Gwei)`;
+            
+            // Update dropdown with live values from the evaluation
+            const liveGas = {
+                standard: { gwei: gasGwei, totalEth: parseFloat(gasCostEth).toFixed(6) },
+                fast: { gwei: (parseFloat(gasGwei) * 1.5).toFixed(2), totalEth: (parseFloat(gasCostEth) * 1.5).toFixed(6) },
+                instant: { gwei: (parseFloat(gasGwei) * 2.5).toFixed(2), totalEth: (parseFloat(gasCostEth) * 2.5).toFixed(6) },
+                swapGasUnits: 150000
+            };
+            cachedGasPrices = liveGas;
+            updateGasDropdown(liveGas);
             
             let badgeColor = "#2ecc71";
             if (riskLevel === "Moderate") badgeColor = "#f39c12";
@@ -382,13 +465,45 @@ async function runUserDrivenEvaluate() {
                 updateConsole("ud-console", "[Exploratory Mode] Low Risk. Auto-executing...");
                 await udUserDecision('auto', 'auto_executed');
             } else if (riskLevel === "Moderate") {
-                wText.textContent = "Warning: This transaction has been classified as moderate risk.";
+                const tau1 = data.result.tau1 || 0.3;
+                const tau2 = data.result.tau2 || 0.7;
+                const minDelay = 15;
+                const maxDelay = 45;
+                
+                // Calculate dynamic delay: scale risk score directly to a wait time (between 15 and 45 seconds).
+                // Formula: MIN_DELAY + ((score - tau1) / (tau2 - tau1)) * (MAX_DELAY - MIN_DELAY)
+                let delaySeconds = 30; // fallback
+                if (tau2 > tau1) {
+                    const safeScore = Math.max(tau1, Math.min(score, tau2));
+                    const delayFraction = (safeScore - tau1) / (tau2 - tau1);
+                    delaySeconds = Math.round(minDelay + delayFraction * (maxDelay - minDelay));
+                }
+
+                wText.textContent = `Warning: This transaction has been classified as moderate risk. PADGF recommends delaying execution by ${delaySeconds} seconds to allow mempool conditions to stabilize before proceeding.`;
                 wp.style.borderColor = badgeColor;
+                
+                // Inject Moderate-specific buttons: Delay (with timer) + Continue Now
+                const controlsDiv = document.getElementById("ud-controls");
+                controlsDiv.innerHTML = `
+                    <button id="btn-ud-delay" onclick="udStartDelay(${delaySeconds})" style="background: linear-gradient(135deg, #f39c12, #d68910);">Delay Transaction (${delaySeconds}s)</button>
+                    <button id="btn-ud-continue-now" class="secondary" onclick="udUserDecision('continue')">Continue Now</button>
+                `;
+                document.getElementById("ud-delay-timer").style.display = "none";
+                
                 wp.style.display = "block";
-                updateConsole("ud-console", "[Exploratory Mode] Moderate Risk. Waiting for user decision...");
+                updateConsole("ud-console", `[Exploratory Mode] Moderate Risk (Score: ${parseFloat(score).toFixed(4)}). PADGF dynamically recommends ${delaySeconds}s delay. Waiting for user decision...`);
             } else if (riskLevel === "High") {
                 wText.textContent = "Warning: PADGF has identified high-risk transaction conditions that may expose the swap to sandwich attack behavior. Continuing may result in reduced output or financial loss. Do you want to continue?";
                 wp.style.borderColor = badgeColor;
+                
+                // Inject High-risk buttons: Cancel + Continue
+                const controlsDiv = document.getElementById("ud-controls");
+                controlsDiv.innerHTML = `
+                    <button id="btn-ud-cancel" onclick="udUserDecision('cancel')" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">Cancel Transaction</button>
+                    <button id="btn-ud-continue" class="secondary" onclick="udUserDecision('continue')">Continue Transaction</button>
+                `;
+                document.getElementById("ud-delay-timer").style.display = "none";
+                
                 wp.style.display = "block";
                 updateConsole("ud-console", "[Exploratory Mode] High Risk. Waiting for user decision...");
             }
@@ -401,15 +516,60 @@ async function runUserDrivenEvaluate() {
     }
 }
 
+let delayTimerInterval = null;
+
+function udStartDelay(seconds) {
+    // Disable both buttons during countdown
+    const delayBtn = document.getElementById("btn-ud-delay");
+    const continueBtn = document.getElementById("btn-ud-continue-now");
+    if (delayBtn) delayBtn.disabled = true;
+    if (continueBtn) continueBtn.disabled = true;
+    
+    const timerEl = document.getElementById("ud-delay-timer");
+    timerEl.style.display = "block";
+    
+    let remaining = seconds;
+    timerEl.textContent = `⏳ Delaying execution: ${remaining}s remaining...`;
+    updateConsole("ud-console", `[Exploratory Mode] User chose to delay. Waiting ${seconds}s for mempool conditions to stabilize...`);
+    
+    delayTimerInterval = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+            timerEl.textContent = `⏳ Delaying execution: ${remaining}s remaining...`;
+        } else {
+            clearInterval(delayTimerInterval);
+            delayTimerInterval = null;
+            timerEl.textContent = `✅ Delay complete. Executing transaction...`;
+            timerEl.style.color = "#2ecc71";
+            updateConsole("ud-console", `[Exploratory Mode] ${seconds}s delay complete. Auto-executing transaction...`);
+            
+            // Auto-execute after delay
+            udUserDecision('delay', 'delayed_then_executed');
+        }
+    }, 1000);
+}
+
 async function udUserDecision(choice, autoActionOverride = null) {
     let userAction = autoActionOverride;
     let executionType = "none";
+    
+    // Clear any running delay timer if user makes a different choice
+    if (delayTimerInterval && choice !== 'delay') {
+        clearInterval(delayTimerInterval);
+        delayTimerInterval = null;
+    }
     
     if (choice === 'cancel') {
         userAction = "cancelled";
         executionType = "none";
         document.getElementById("ud-warning-panel").style.display = "none";
+        document.getElementById("ud-delay-timer").style.display = "none";
         updateConsole("ud-console", "[Exploratory Mode] User cancelled the transaction.");
+    } else if (choice === 'delay') {
+        // Delay completed - execute normally
+        userAction = autoActionOverride || "delayed_then_executed";
+        executionType = "normal";
+        document.getElementById("ud-warning-panel").style.display = "none";
     } else if (choice === 'continue') {
         if (currentUdContext.risk_level === "High") {
             userAction = "accepted_high_warning";
@@ -419,7 +579,8 @@ async function udUserDecision(choice, autoActionOverride = null) {
             executionType = "normal";
         }
         document.getElementById("ud-warning-panel").style.display = "none";
-        updateConsole("ud-console", `[Exploratory Mode] User continued despite ${currentUdContext.risk_level} risk warning. Attempting execution...`);
+        document.getElementById("ud-delay-timer").style.display = "none";
+        updateConsole("ud-console", `[Exploratory Mode] User continued immediately despite ${currentUdContext.risk_level} risk warning. Executing...`);
     } else if (choice === 'auto') {
         userAction = "auto_executed";
         executionType = "normal";
@@ -480,11 +641,23 @@ function renderUdResult(result) {
     if (result.victim_output_loss) rows.push(["Victim Output Loss", `${result.victim_output_loss} USDC`]);
     if (result.financial_loss_percentage) rows.push(["Financial Loss Percentage", result.financial_loss_percentage]);
     
+    // Calculate the actual applied gas cost in Gwei
+    const appliedSpeed = result.gas_speed_applied ? result.gas_speed_applied.toLowerCase() : 'standard';
+    let appliedGasCostGwei = result.estimated_gas_price_gwei ? parseFloat(result.estimated_gas_price_gwei).toFixed(2) : 'N/A';
+    let appliedGasCostEth = result.estimated_gas_cost_eth ? parseFloat(result.estimated_gas_cost_eth).toFixed(6) : 'N/A';
+    if (appliedSpeed === 'fast' && appliedGasCostGwei !== 'N/A') {
+        appliedGasCostGwei = (parseFloat(appliedGasCostGwei) * 1.5).toFixed(2);
+        appliedGasCostEth = (parseFloat(appliedGasCostEth) * 1.5).toFixed(6);
+    } else if (appliedSpeed === 'instant' && appliedGasCostGwei !== 'N/A') {
+        appliedGasCostGwei = (parseFloat(appliedGasCostGwei) * 2.5).toFixed(2);
+        appliedGasCostEth = (parseFloat(appliedGasCostEth) * 2.5).toFixed(6);
+    }
+
     rows.push(
         ["Slippage Deviation", `${result.slippage_deviation}%`],
         ["Price Impact", `${result.price_impact}%`],
         ["Gas Sensitivity", result.gas_sensitivity],
-        ["Applied Gas Speed Multiplier", result.gas_speed_applied || "Standard (Base Fee)"],
+        ["Applied Gas Cost", `${appliedGasCostGwei} Gwei (~${appliedGasCostEth} ETH)`],
         ["Normalized Risk Score", result.normalized_risk_score],
         ["Thresholds", `tau1 = ${result.tau1}, tau2 = ${result.tau2}`],
         ["PADGF Risk Level", result.risk_level],
@@ -501,11 +674,11 @@ function renderUdResult(result) {
         if (label === "PADGF Risk Level" || label === "PADGF Recommendation" || label === "Final Status" || label === "User Action") {
             let cls = "";
             if (value.includes("Low") || value.includes("Execute") || value === "executed_low_risk" || value === "auto_executed") cls = "status-success";
-            else if (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning") cls = "status-pending"; // generic yellow/orange
+            else if (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning" || value === "delayed_then_executed") cls = "status-pending"; // generic yellow/orange
             else if (value.includes("High") || value.includes("Block") || value === "accepted_high_warning" || value === "executed_after_high_risk_warning" || value === "continued_despite_warning" || value === "executed_after_warning") cls = "status-error";
             else if (value.includes("cancel")) cls = "status-pending"; // gray or default
             
-            styledValue = `<span class="${cls}" ${cls === "status-pending" && (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning" || value === "continued_despite_warning" || value === "executed_after_warning") ? 'style="color:#d35400; font-weight:bold;"' : ''}>${value}</span>`;
+            styledValue = `<span class="${cls}" ${cls === "status-pending" && (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning" || value === "delayed_then_executed" || value === "continued_despite_warning" || value === "executed_after_warning") ? 'style="color:#d35400; font-weight:bold;"' : ''}>${value}</span>`;
             if (value.includes("cancel")) styledValue = `<span style="color:#7f8c8d; font-weight:bold;">${value}</span>`;
         }
         

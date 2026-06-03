@@ -39,7 +39,9 @@
                             <option value="25">25 WETH</option>
                             <option value="50">50 WETH</option>
                             <option value="100">100 WETH</option>
+                            <option value="other">Other...</option>
                         </select>
+                        <input type="number" id="ud-amount-custom" class="custom-input" placeholder="Enter custom amount..." style="display: none; margin-top: 8px; width: 100%;">
                     </div>
                     <div class="form-group">
                         <label>Slippage Tolerance</label>
@@ -52,13 +54,13 @@
                         </select>
                     </div>
                     <div class="form-group gas-controls">
-                        <label>Gas Priority Strategy</label>
+                        <label>Gas Cost (per instruction)</label>
                         <select id="ud-gas-speed">
-                            <option value="standard">Standard (Base Fee)</option>
-                            <option value="fast">Fast (1.5x Multiplier)</option>
-                            <option value="instant">Instant (2.5x Multiplier)</option>
+                            <option value="standard" id="gas-opt-standard">≈ Loading... Gwei</option>
+                            <option value="fast" id="gas-opt-fast">≈ Loading... Gwei (1.5×)</option>
+                            <option value="instant" id="gas-opt-instant">≈ Loading... Gwei (2.5×)</option>
                         </select>
-                        <p id="ud-gas-cost-text" style="font-size: 13px; margin-top: 12px; margin-bottom: 0; color: #38bdf8; text-align: left;">Est. Gas: Pending Eval...</p>
+                        <p id="ud-gas-cost-text" style="font-size: 13px; margin-top: 12px; margin-bottom: 0; color: #38bdf8; text-align: left;">Total Est. Cost: Pending evaluation...</p>
                     </div>
                 </div>
                 <button id="btn-ud-run" onclick="runUserDrivenEvaluate()">Run User-Driven PADGF Evaluation</button>
@@ -68,10 +70,10 @@
                 <h3 id="ud-assessment-text" style="margin-top:0;">PADGF Assessment: </h3>
                 <p id="ud-recommendation-text" style="font-weight: bold; margin-bottom: 8px;"></p>
                 <p id="ud-risk-score-text" style="font-size: 13px; margin-bottom: 12px; opacity: 0.85;"></p>
-                <p id="ud-warning-text" style="margin-bottom: 20px; font-size: 14px;"></p>
+                <p id="ud-warning-text" style="margin-bottom: 12px; font-size: 14px;"></p>
+                <p id="ud-delay-timer" style="display:none; font-size: 22px; font-weight: 700; text-align: center; margin: 16px 0; color: #f39c12; letter-spacing: 1px;"></p>
                 <div class="ud-controls" id="ud-controls">
-                    <button id="btn-ud-cancel" onclick="udUserDecision('cancel')" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">Cancel Transaction</button>
-                    <button id="btn-ud-continue" class="secondary" onclick="udUserDecision('continue')">Continue Transaction</button>
+                    <!-- Buttons are injected dynamically by JS based on risk level -->
                 </div>
             </div>
 
@@ -102,5 +104,9 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // Auto-fetch current gas prices on page load
+        fetchGasPrices();
+    </script>
 </body>
 </html>
