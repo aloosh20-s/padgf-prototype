@@ -1,14 +1,14 @@
 const hre = require("hardhat");
-const { 
-    WETH_ADDRESS, USDC_ADDRESS, ROUTER_ADDRESS, 
-    IMPERSONATED_ACCOUNT, FORK_BLOCK, WETH_DECIMALS, USDC_DECIMALS 
+const {
+    WETH_ADDRESS, USDC_ADDRESS, ROUTER_ADDRESS,
+    IMPERSONATED_ACCOUNT, FORK_BLOCK, WETH_DECIMALS, USDC_DECIMALS
 } = require("../src/constants.js");
 const { setupProviderAndSigner } = require("../src/providerSetup.js");
 const { getTokens, getRouter, getQuote, executeSwap } = require("../src/dexInteraction.js");
 const { formatOutput, saveResult } = require("../src/resultLogger.js");
 
 async function main() {
-    console.log("Starting Phase 2 Sandwich Attack Simulation...");
+    console.log("Sandwich Attack Simulation...");
     try {
         // Reset fork to clean state to prevent accumulated base fee errors
         await hre.network.provider.send("hardhat_reset", [{
@@ -30,16 +30,16 @@ async function main() {
         // Provide attacker with enough WETH to perform the attack
         const { weth: victimWeth, usdc: victimUsdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, victimSigner);
         const { weth: attackerWeth, usdc: attackerUsdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, attackerSigner);
-        
+
         const victimRouter = await getRouter(ROUTER_ADDRESS, victimSigner);
         const attackerRouter = await getRouter(ROUTER_ADDRESS, attackerSigner);
 
         // Define swap amounts
         const victimAmountInEth = "1.0";
         const victimAmountIn = hre.ethers.parseUnits(victimAmountInEth, WETH_DECIMALS);
-        
+
         // Attacker uses slightly more capital to significantly shift the pool
-        const attackerAmountInEth = "5.0"; 
+        const attackerAmountInEth = "5.0";
         const attackerAmountIn = hre.ethers.parseUnits(attackerAmountInEth, WETH_DECIMALS);
 
         // Cheat to give attacker WETH
@@ -49,11 +49,11 @@ async function main() {
             attackerSigner.address,
             "0x8AC7230489E80000" // 10 ETH
         ]);
-        
+
         // Wrap 5.0 ETH into WETH
         const WETH_ABI_WRAP = ["function deposit() public payable"];
         const attackerWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, attackerSigner);
-        await attackerWethContract.deposit({ 
+        await attackerWethContract.deposit({
             value: attackerAmountIn,
             gasLimit: 100000,
             maxFeePerGas: hre.ethers.parseUnits("300", "gwei"),
@@ -109,7 +109,7 @@ async function main() {
         const victimActualOutputWei = victimUsdcAfter - victimUsdcBefore;
         const attackedActualOutput = hre.ethers.formatUnits(victimActualOutputWei, USDC_DECIMALS);
         const attackerWethAfter = await attackerWeth.balanceOf(attackerSigner.address);
-        
+
         console.log(`\nVictim actual output: ${attackedActualOutput} USDC`);
 
         // 7 & 8. Calculate Loss
@@ -135,7 +135,7 @@ async function main() {
 
         // 10. Save Output
         const resultData = formatOutput({
-            scenario_name: "Phase 2 Sandwich Attack",
+            scenario_name: " Sandwich Attack",
             fork_block: FORK_BLOCK,
             dex: "Uniswap V2",
             input_token: "WETH",
@@ -159,7 +159,7 @@ async function main() {
 
     } catch (error) {
         console.error("Execution Error:", error.message);
-        
+
         const fs = require('fs');
         const path = require('path');
         const resultsDir = path.join(__dirname, '..', 'results');

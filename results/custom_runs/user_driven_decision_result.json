@@ -3,7 +3,7 @@
   "official_thesis_data": false,
   "exploratory_only": true,
   "input_amount": "10",
-  "slippage_tolerance": "5%",
+  "slippage_tolerance": "1%",
   "reference_output": "38968.559488",
   "simulated_output": "37441.829181",
   "actual_output": "37441.829181",
@@ -21,10 +21,10 @@
   "tau2": 0.7,
   "risk_level": "Moderate",
   "padgf_recommendation": "Delay Recommended",
-  "user_action": "accepted_delay_warning",
+  "user_action": "delayed_then_executed",
   "execution_allowed": true,
-  "execution_status": "executed_after_delay_warning",
-  "transaction_hash": "0x33a9a4f28f7ae2abfa6e7afda92a0e0dc1ed5a6f01f2b2d31f6010d950c9d446",
+  "execution_status": "executed_after_30s_delay",
+  "transaction_hash": "0x92d3def434c8d9ea4c3ef661eeaf8da2a245fd14ca69d32e167e1ac5a3b5ea1c",
   "output_artifact": "results/custom_runs/user_driven_decision_result.json",
-  "timestamp": "2026-06-03T12:44:57.843Z"
+  "timestamp": "2026-06-03T17:30:20.464Z"
 }

@@ -12,9 +12,9 @@
   "financial_loss_percentage": "0.08%",
   "attacker_gas_used": "243827",
   "victim_gas_used": "108507",
-  "frontrun_hash": "0x8104cc926bd04e29f80cddb88276b1c18abc6efddd90652bdf9babf14905e37b",
-  "victim_hash": "0x6989ff3e2e4030610796e1e0edb99a5dac2dd4b45c171150aecfd2962135b30e",
-  "backrun_hash": "0xbc3f0cea55e24237eb9bafd7350892d4f9dfc08e96f90fc857d809237cc8bc30",
+  "frontrun_hash": "0xe84523ce780b4144130af18701465de3f6a9804a8c45cfe57659bc435581374f",
+  "victim_hash": "0x6fe718a703ad4984b401b1081a593bbef920472e0bcc8ddde8194ff24e39908a",
+  "backrun_hash": "0xbf76947f4f5c86dce03cad56a76982691c729008072b0a54eb999e147e0f8014",
   "execution_status": "success",
-  "timestamp": "2026-06-02T20:15:29.025Z"
+  "timestamp": "2026-06-03T17:16:00.744Z"
 }

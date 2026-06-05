@@ -7,13 +7,13 @@
   "output_token": "USDC",
   "input_amount": "20",
   "slippage_tolerance": "1%",
-  "reference_output": "71928.284161",
-  "simulated_output": "67664.809671",
-  "actual_output": "67664.809671",
-  "slippage_deviation": "5.927396350032345",
-  "price_impact": "5.0382868975274935",
-  "gas_sensitivity": "1.603239595",
-  "normalized_risk_score": "0.8021376527933334",
+  "reference_output": "77374.016928",
+  "simulated_output": "72624.98964",
+  "actual_output": "72624.98964",
+  "slippage_deviation": "6.137754606199626",
+  "price_impact": "5.217091415269682",
+  "gas_sensitivity": "12.227950721",
+  "normalized_risk_score": "0.8163039342946667",
   "threshold_values": {
     "tau1": 0.3,
     "tau2": 0.7
@@ -22,5 +22,5 @@
   "execution_allowed": false,
   "execution_status": "Block",
   "transaction_hash": "",
-  "timestamp": "2026-05-31T16:14:17.031Z"
+  "timestamp": "2026-06-03T17:19:30.286Z"
 }

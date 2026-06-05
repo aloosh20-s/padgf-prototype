@@ -28,8 +28,8 @@
             <div class="custom-panel">
                 <div class="custom-form">
                     <div class="form-group">
-                        <label>Input Amount (WETH)</label>
-                        <select id="ud-amount">
+                        <label for="ud-amount">Input Amount (WETH)</label>
+                        <select id="ud-amount" title="Input Amount (WETH)">
                             <option value="1" selected>1 WETH</option>
                             <option value="2">2 WETH</option>
                             <option value="5">5 WETH</option>
@@ -42,8 +42,8 @@
                         <input type="number" id="ud-amount-custom" class="custom-input" placeholder="Enter custom amount..." style="display: none; margin-top: 8px; width: 100%;">
                     </div>
                     <div class="form-group">
-                        <label>Slippage Tolerance</label>
-                        <select id="ud-slippage">
+                        <label for="ud-slippage">Slippage Tolerance</label>
+                        <select id="ud-slippage" title="Slippage Tolerance">
                             <option value="0.5">0.5%</option>
                             <option value="1" selected>1%</option>
                             <option value="2">2%</option>
@@ -52,8 +52,8 @@
                         </select>
                     </div>
                     <div class="form-group gas-controls">
-                        <label>Gas Cost (per instruction)</label>
-                        <select id="ud-gas-speed">
+                        <label for="ud-gas-speed">Gas Cost (per instruction)</label>
+                        <select id="ud-gas-speed" title="Gas Cost (per instruction)">
                             <option value="standard" id="gas-opt-standard">≈ Loading... Gwei</option>
                             <option value="fast" id="gas-opt-fast">≈ Loading... Gwei (1.5×)</option>
                             <option value="instant" id="gas-opt-instant">≈ Loading... Gwei (2.5×)</option>
