@@ -24,7 +24,7 @@ async function main() {
         const { weth, usdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, signer);
         const router = await getRouter(ROUTER_ADDRESS, signer);
 
-        const amountInEth = "1.0";
+        const amountInEth = "14";
         const amountIn = hre.ethers.parseUnits(amountInEth, WETH_DECIMALS);
         const path = [WETH_ADDRESS, USDC_ADDRESS];
 
@@ -77,7 +77,7 @@ async function main() {
             dex: "Uniswap V2",
             input_token: "WETH",
             output_token: "USDC",
-            input_amount: "1.0",
+            input_amount: "14",
             slippage_tolerance: "1%",
             expected_output: "0",
             actual_output: "0",

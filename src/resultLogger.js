@@ -35,7 +35,6 @@ function formatOutput(data) {
             simulated_output: data.simulated_output,
             slippage_deviation: data.slippage_deviation,
             price_impact: data.price_impact,
-            gas_sensitivity: data.gas_sensitivity,
             normalized_risk_score: data.normalized_risk_score,
             threshold_values: data.threshold_values,
             padgf_decision: data.padgf_decision,
@@ -104,7 +103,6 @@ function saveResult(formattedData, fileName = 'baseline_result.json') {
 - **Simulated Execution Output:** ${formattedData.simulated_output} ${formattedData.output_token}
 - **Slippage Deviation:** ${parseFloat(formattedData.slippage_deviation).toFixed(4)}%
 - **Price Impact Proxy:** ${parseFloat(formattedData.price_impact).toFixed(4)}%
-- **Gas Sensitivity:** ${formattedData.gas_sensitivity} Gwei
 - **Normalized Risk Score:** **${parseFloat(formattedData.normalized_risk_score).toFixed(4)}**
 
 ## PADGF Decision
@@ -114,7 +112,7 @@ function saveResult(formattedData, fileName = 'baseline_result.json') {
 - **Transaction Hash:** ${formattedData.transaction_hash || 'N/A (Blocked/Delayed)'}
 
 ### Interpretation
-The PADGF risk evaluator successfully modeled the pre-broadcast transaction parameters before the transaction enters the public mempool. By analyzing slippage deviation, gas sensitivity, and potential price impact, it derived a normalized risk score of ${parseFloat(formattedData.normalized_risk_score).toFixed(4)}. Evaluated against the threshold set points, the decision engine determined the transaction should result in: **${formattedData.padgf_decision}**. 
+The PADGF risk evaluator successfully modeled the pre-broadcast transaction parameters before the transaction enters the public mempool. By analyzing slippage deviation and potential price impact, it derived a normalized risk score of ${parseFloat(formattedData.normalized_risk_score).toFixed(4)}. Evaluated against the threshold set points, the decision engine determined the transaction should result in: **${formattedData.padgf_decision}**. 
 *(Note: PADGF provides a pre-broadcast risk evaluation and decision framework, not a guarantee of MEV prevention).*
 `;
         fs.writeFileSync(mdPath, mdContent);

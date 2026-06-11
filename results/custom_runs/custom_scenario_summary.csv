@@ -1,0 +1,4 @@
+scenario_name,risk_category_target,input_amount,slippage_tolerance,reference_output,simulated_output,actual_output,output_deviation,slippage_deviation,price_impact,normalized_risk_score,risk_level,padgf_decision,execution_allowed,execution_status,estimated_gas_cost_eth,estimated_gas_price_gwei,artifact_filename
+Custom Low-Risk Case,Low,10.0,1%,38968.559488,38968.559488,38968.559488,0.000000,0.0000%,0.0000%,0.0000,Low,Execute,true,success,0.005,30,custom_low_risk_result.json
+Custom Moderate-Risk Case,Moderate,10.0,2%,38968.559488,38655.832753,38655.832753,312.726735,0.8025%,0.6821%,0.3535,Moderate,Delay,false,Delay,0.005,80,custom_moderate_risk_result.json
+Custom High-Risk Case,High,10.0,5%,38968.559488,38224.300983,38224.300983,744.258505,1.9099%,1.6234%,0.7528,High,Block,false,Block,0.005,150,custom_high_risk_result.json

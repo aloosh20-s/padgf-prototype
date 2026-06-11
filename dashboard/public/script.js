@@ -38,7 +38,7 @@ function renderTable(data) {
         { label: "Actual/Simulated Output", key: "attacked_actual_output", fb: "actual_output", fb2: "simulated_output", formatter: (d) => `${parseFloat(d.attacked_actual_output || d.actual_output || d.simulated_output || 0).toFixed(6)} USDC` },
         { label: "Victim Loss", key: "victim_output_loss", default: "0.00", formatter: (d) => d.victim_output_loss ? `${parseFloat(d.victim_output_loss).toFixed(6)} USDC` : "0.00 USDC" },
         { label: "Slippage Deviation", key: "slippage_deviation", default: "N/A", formatter: (d) => d.slippage_deviation ? `${parseFloat(d.slippage_deviation).toFixed(4)}%` : "N/A" },
-        { label: "Gas Used", key: "gas_used", fb: "victim_gas_used", fb2: "gas_sensitivity", formatter: (d) => d.gas_used || d.victim_gas_used || (d.gas_sensitivity ? d.gas_sensitivity + " Gwei" : "N/A") },
+        { label: "Gas Used", key: "gas_used", fb: "victim_gas_used", formatter: (d) => d.gas_used || d.victim_gas_used || "N/A" },
         { label: "Risk Score", key: "normalized_risk_score", default: "N/A", formatter: (d) => d.normalized_risk_score ? parseFloat(d.normalized_risk_score).toFixed(4) : "N/A" },
         { label: "PADGF Decision", key: "padgf_decision", default: "N/A" },
         { label: "Execution Status", key: "execution_status" }
@@ -156,7 +156,14 @@ async function runPhase(phaseRoute) {
 // =================== SECTION 2: CUSTOM RUNS ===================
 
 async function runCustom() {
-    const amount = document.getElementById("custom-amount").value;
+    let amount = document.getElementById("custom-amount").value;
+    if (amount === "other") {
+        amount = document.getElementById("custom-amount-custom").value;
+        if (!amount || isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid numeric amount greater than 0.");
+            return;
+        }
+    }
     const slippage = document.getElementById("custom-slippage").value;
     const scenario = document.getElementById("custom-scenario").value;
 
@@ -222,6 +229,14 @@ function renderCustomResult(result) {
     if (result.victim_gas_used) rows.push(["Victim Gas Used", result.victim_gas_used]);
     if (result.attacker_gas_used) rows.push(["Attacker Gas Used", result.attacker_gas_used]);
     
+    if (result.attacker_gross_profit_usdc !== undefined) rows.push(["Attacker Gross Profit", `${parseFloat(result.attacker_gross_profit_usdc).toFixed(4)} USDC`]);
+    if (result.attacker_gas_cost_usdc !== undefined) rows.push(["Attacker Gas Cost", `${parseFloat(result.attacker_gas_cost_usdc).toFixed(4)} USDC`]);
+    if (result.attacker_net_profit_usdc !== undefined) rows.push(["Attacker Net Profit", `${parseFloat(result.attacker_net_profit_usdc).toFixed(4)} USDC`]);
+    if (result.profitability_ratio !== undefined) {
+        let pRatio = String(result.profitability_ratio);
+        rows.push(["Profitability Ratio", pRatio.includes('%') ? pRatio : `${parseFloat(pRatio).toFixed(4)}%`]);
+    }
+
     // Demo mode fields
     if (result.tau1 !== undefined) rows.push(["Threshold tau1", result.tau1]);
     if (result.tau2 !== undefined) rows.push(["Threshold tau2", result.tau2]);
@@ -390,6 +405,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 amountCustomEl.focus();
             } else {
                 amountCustomEl.style.display = "none";
+            }
+        });
+    }
+
+    const customAmountEl = document.getElementById("custom-amount");
+    const customAmountCustomEl = document.getElementById("custom-amount-custom");
+    if (customAmountEl && customAmountCustomEl) {
+        customAmountEl.addEventListener("change", function() {
+            if (this.value === "other") {
+                customAmountCustomEl.style.display = "block";
+                customAmountCustomEl.focus();
+            } else {
+                customAmountCustomEl.style.display = "none";
             }
         });
     }
@@ -656,8 +684,11 @@ function renderUdResult(result) {
     rows.push(
         ["Slippage Deviation", `${result.slippage_deviation}%`],
         ["Price Impact", `${result.price_impact}%`],
-        ["Gas Sensitivity", result.gas_sensitivity],
         ["Applied Gas Cost", `${appliedGasCostGwei} Gwei (~${appliedGasCostEth} ETH)`],
+        ["Attacker Gross Profit", result.attacker_gross_profit_usdc !== undefined ? `${parseFloat(result.attacker_gross_profit_usdc).toFixed(4)} USDC` : "N/A"],
+        ["Attacker Gas Cost", result.attacker_gas_cost_usdc !== undefined ? `${parseFloat(result.attacker_gas_cost_usdc).toFixed(4)} USDC` : "N/A"],
+        ["Attacker Net Profit", result.attacker_net_profit_usdc !== undefined ? `${parseFloat(result.attacker_net_profit_usdc).toFixed(4)} USDC` : "N/A"],
+        ["Profitability Ratio", result.profitability_ratio !== undefined ? (String(result.profitability_ratio).includes('%') ? result.profitability_ratio : `${parseFloat(result.profitability_ratio).toFixed(4)}%`) : "N/A"],
         ["Normalized Risk Score", result.normalized_risk_score],
         ["Thresholds", `tau1 = ${result.tau1}, tau2 = ${result.tau2}`],
         ["PADGF Risk Level", result.risk_level],

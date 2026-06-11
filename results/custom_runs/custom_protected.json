@@ -7,13 +7,17 @@
   "output_token": "USDC",
   "input_amount": "20",
   "slippage_tolerance": "1%",
-  "reference_output": "77374.016928",
-  "simulated_output": "72624.98964",
-  "actual_output": "72624.98964",
-  "slippage_deviation": "6.137754606199626",
-  "price_impact": "5.217091415269682",
-  "gas_sensitivity": "12.227950721",
-  "normalized_risk_score": "0.8163039342946667",
+  "reference_output": "77748.820379",
+  "simulated_output": "76509.899737",
+  "actual_output": "76509.899737",
+  "slippage_deviation": "1.5934912400736956",
+  "price_impact": "1.3544675540626412",
+  "eth_price_estimate": "3887.44101895",
+  "attacker_gross_profit_usdc": "1053.0825456999976",
+  "attacker_gas_cost_usdc": "28.615432689432396",
+  "attacker_net_profit_usdc": "1024.4671130105653",
+  "profitability_ratio": "1.3176625806238913",
+  "normalized_risk_score": "0.7274792992058956",
   "threshold_values": {
     "tau1": 0.3,
     "tau2": 0.7
@@ -22,5 +26,5 @@
   "execution_allowed": false,
   "execution_status": "Block",
   "transaction_hash": "",
-  "timestamp": "2026-06-03T17:19:30.286Z"
+  "timestamp": "2026-06-10T22:35:23.580Z"
 }

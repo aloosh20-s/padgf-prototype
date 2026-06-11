@@ -56,19 +56,16 @@ async function run() {
     const referenceOutput = hre.ethers.formatUnits(referenceQuoteWei, USDC_DECIMALS);
 
     // Dynamic Mempool Volatility Injection (Exploratory Condition)
-    // To trigger different risk levels, we inject volatility based on input size.
-    // Small < 10 -> Low (No volatility)
-    // Med >=10 & <25 -> Moderate
-    // High >= 25 -> High
+    // Same continuous constants across the entire framework.
     const amountVal = Number(CUSTOM_AMOUNT);
     const tau1 = 0.3;
     const tau2 = 0.7;
 
     let volatilityVol = 0;
-    if (amountVal >= 10 && amountVal < 25) {
-        volatilityVol = (amountVal * 25).toString(); // Inject heavy volume to guarantee Medium Risk > 0.3
+    if (amountVal >= 8 && amountVal < 25) {
+        volatilityVol = (amountVal * 5).toString(); // 5x multiplier matches custom-run
     } else if (amountVal >= 25) {
-        volatilityVol = (amountVal * 150).toString(); // Inject massive volume to guarantee High Risk > 0.7
+        volatilityVol = (amountVal * 30).toString(); // 30x multiplier matches custom-run
     }
 
     if (volatilityVol > 0) {
@@ -104,7 +101,7 @@ async function run() {
     const estimatedCostEth = hre.ethers.formatEther(estimatedCostWei);
 
     // Calculate Risk
-    const riskMetrics = calculateRisk(referenceOutput, simulatedOutput, gasPriceWei);
+    const riskMetrics = calculateRisk(CUSTOM_AMOUNT, referenceOutput, simulatedOutput, gasPriceWei);
     const score = riskMetrics.normalized_risk_score;
     
     let riskLevel = "Low";
@@ -131,8 +128,12 @@ async function run() {
         victim_output_loss: null,
         financial_loss_percentage: null,
         slippage_deviation: riskMetrics.raw_slippage_deviation.toFixed(6),
-        price_impact: riskMetrics.raw_price_impact.toFixed(6),
-        gas_sensitivity: riskMetrics.raw_gas_sensitivity.toFixed(6),
+        price_impact: riskMetrics.price_impact.toFixed(6),
+        eth_price_estimate: riskMetrics.eth_price_estimate.toFixed(2),
+        attacker_gross_profit_usdc: riskMetrics.attacker_gross_profit_usdc.toFixed(6),
+        attacker_gas_cost_usdc: riskMetrics.attacker_gas_cost_usdc.toFixed(6),
+        attacker_net_profit_usdc: riskMetrics.attacker_net_profit_usdc.toFixed(6),
+        profitability_ratio: riskMetrics.profitability_ratio.toFixed(4) + "%",
         gas_speed_applied: DEMO_GAS_SPEED.toUpperCase(),
         normalized_risk_score: score.toFixed(6),
         estimated_gas_cost_eth: estimatedCostEth,
@@ -172,9 +173,10 @@ async function run() {
             const attackerSigner = signers[1];
             const { weth: attackerWeth, usdc: attackerUsdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, attackerSigner);
             const attackerRouter = await getRouter(ROUTER_ADDRESS, attackerSigner);
-            const attackerAmountIn = hre.ethers.parseUnits("5.0", WETH_DECIMALS);
+            const dynamicAttackerAmount = volatilityVol > 0 ? volatilityVol.toString() : "5.0";
+            const attackerAmountIn = hre.ethers.parseUnits(dynamicAttackerAmount, WETH_DECIMALS);
 
-            await hre.network.provider.send("hardhat_setBalance", [attackerSigner.address, "0x8AC7230489E80000"]); // 10 ETH
+            await hre.network.provider.send("hardhat_setBalance", [attackerSigner.address, "0x152D02C7E14AF6800000"]); // 100,000 ETH
             const WETH_ABI_WRAP = ["function deposit() public payable"];
             const attackerWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, attackerSigner);
             await attackerWethContract.deposit({ 

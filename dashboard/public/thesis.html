@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PADGF - Thesis Scenario</title>
     <link rel="stylesheet" href="main.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
 </head>
+
 <body class="thesis-page">
     <nav class="top-nav">
         <div class="nav-brand">PADGF<span style="color:#38bdf8;">.</span></div>
@@ -27,14 +31,14 @@
                 <span class="config-tag">Fork Block: 19400000</span>
                 <span class="config-tag">DEX: Uniswap V2</span>
                 <span class="config-tag">Pair: WETH &rarr; USDC</span>
-                <span class="config-tag">Input: 1.0 WETH</span>
+                <span class="config-tag">Input: 14 WETH</span>
                 <span class="config-tag">Slippage: 1%</span>
             </div>
 
             <div class="controls">
-                <button id="btn-phase1" onclick="runPhase('phase1')">Run Phase 1: Baseline Swap</button>
-                <button id="btn-phase2" onclick="runPhase('phase2')">Run Phase 2: Sandwich Attack</button>
-                <button id="btn-phase3" onclick="runPhase('phase3')">Run Phase 3: PADGF Protected Swap</button>
+                <button id="btn-phase1" onclick="runPhase('phase1')">Run:Baseline Swap</button>
+                <button id="btn-phase2" onclick="runPhase('phase2')">Run:Sandwich Attack</button>
+                <button id="btn-phase3" onclick="runPhase('phase3')">Run:PADGF Protected Swap</button>
                 <button id="btn-refresh" class="secondary" onclick="fetchResults()">Reload Results Data</button>
             </div>
 
@@ -57,9 +61,12 @@
                     <!-- Dynamically Populated by script.js -->
                 </tbody>
             </table>
-            
+
             <div class="interpretation">
-                <strong>Interpretation:</strong> Phase 1 establishes the normal execution baseline. Phase 2 demonstrates measurable victim output degradation under a controlled sandwich attack sequence. Phase 3 applies the PADGF pre-broadcast risk evaluation model and produces a risk-aware decision before transaction submission.
+                <strong>Interpretation:</strong> Phase 1 establishes the normal execution baseline. Phase 2 demonstrates
+                measurable victim output degradation under a controlled sandwich attack sequence. Phase 3 applies the
+                PADGF pre-broadcast risk evaluation model and produces a risk-aware decision before transaction
+                submission.
             </div>
 
             <div class="chart-container">
@@ -73,11 +80,15 @@
                 <h3>Experiment Data Artifacts</h3>
                 <div class="download-links">
                     <a class="dl-btn" href="/api/download/baseline_result.json" target="_blank">baseline_result.json</a>
-                    <a class="dl-btn" href="/api/download/sandwich_attack_result.json" target="_blank">sandwich_attack_result.json</a>
-                    <a class="dl-btn" href="/api/download/protected_swap_result.json" target="_blank">protected_swap_result.json</a>
+                    <a class="dl-btn" href="/api/download/sandwich_attack_result.json"
+                        target="_blank">sandwich_attack_result.json</a>
+                    <a class="dl-btn" href="/api/download/protected_swap_result.json"
+                        target="_blank">protected_swap_result.json</a>
                     <a class="dl-btn" href="/api/download/baseline_summary.csv" target="_blank">baseline_summary.csv</a>
-                    <a class="dl-btn" href="/api/download/sandwich_attack_summary.csv" target="_blank">sandwich_attack_summary.csv</a>
-                    <a class="dl-btn" href="/api/download/protected_swap_summary.csv" target="_blank">protected_swap_summary.csv</a>
+                    <a class="dl-btn" href="/api/download/sandwich_attack_summary.csv"
+                        target="_blank">sandwich_attack_summary.csv</a>
+                    <a class="dl-btn" href="/api/download/protected_swap_summary.csv"
+                        target="_blank">protected_swap_summary.csv</a>
                 </div>
             </div>
         </div>
@@ -89,4 +100,5 @@
         window.addEventListener('DOMContentLoaded', fetchResults);
     </script>
 </body>
+
 </html>

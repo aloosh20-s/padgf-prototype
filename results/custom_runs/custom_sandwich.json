@@ -7,15 +7,15 @@
   "output_token": "USDC",
   "victim_input_amount": "20",
   "slippage_tolerance": "1%",
-  "baseline_expected_output": "77623.579077",
-  "attacked_actual_output": "77561.072029",
-  "victim_output_loss": "62.507048",
+  "baseline_expected_output": "77748.820379",
+  "attacked_actual_output": "77686.161947",
+  "victim_output_loss": "62.658432",
   "financial_loss_percentage": "0.08%",
   "attacker_gas_used": "243827",
   "victim_gas_used": "108543",
-  "frontrun_hash": "0x412ff43774126fa50af9447e782d2be25e342069c1a396087ce516865750766a",
-  "victim_hash": "0xc934979527b01eb3d1a84ee9395f5aa2489ed890cf3096b476b746809fb1bfa8",
-  "backrun_hash": "0xad969f2d1c0cfade738314e22198689c2a8dc5d5491f1730850634d12abcf539",
+  "frontrun_hash": "0x3b860b9101b36f04efea4749b2cc0fb0ca42c5e6ec2ccc9970fef36bde41e423",
+  "victim_hash": "0xd477cf73770db9205beb97bd192184fc8d988f430b0ed3dd342d5971d890fac5",
+  "backrun_hash": "0x248d67bf6f7ba4efa8a82e6daf36f5c12227c612e00eefc4577c9cfd18750153",
   "execution_status": "success",
-  "timestamp": "2026-06-03T17:18:03.430Z"
+  "timestamp": "2026-06-10T22:33:31.801Z"
 }

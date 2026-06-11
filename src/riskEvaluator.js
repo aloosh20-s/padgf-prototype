@@ -1,57 +1,78 @@
 /**
  * Phase 3 - Risk Evaluator
  * This module calculates the pre-broadcast risk of a transaction
- * based on slippage deviation, price impact proxy, and gas sensitivity.
+ * based on slippage deviation, price impact, and realistic attacker economics.
  */
 
-function calculateRisk(referenceOutputStr, simulatedOutputStr, gasPriceWei, config = {}) {
-    // Default weights for the formula: R = w1*S + w2*P + w3*G
-    const { w1 = 0.5, w2 = 0.3, w3 = 0.2 } = config;
+function calculateRisk(victimInputEthStr, referenceOutputStr, simulatedOutputStr, gasPriceWei, config = {}) {
+    // Configurable parameters for economic math
+    const { 
+        attackerGasProxy = 250000, 
+        extractionEfficiency = 0.85,
+        w1 = 0.6, w2 = 0.4 // Weights for normalized_risk_score (Profitability vs Slippage)
+    } = config;
 
     const referenceOutput = Number(referenceOutputStr);
     const simulatedOutput = Number(simulatedOutputStr);
+    const inputEth = Number(victimInputEthStr);
 
-    // 1. Slippage Deviation (S)
-    // Percentage difference between ideal referenced quote and current simulation
+    // 1. Output Loss & Slippage Deviation
+    const victimOutputLoss = referenceOutput - simulatedOutput;
     let slippageDeviation = 0;
-    if (referenceOutput > simulatedOutput) {
-        slippageDeviation = ((referenceOutput - simulatedOutput) / referenceOutput) * 100;
+    if (referenceOutput > simulatedOutput && referenceOutput > 0) {
+        slippageDeviation = (victimOutputLoss / referenceOutput) * 100;
     }
 
-    // Normalize S (Cap at 5% deviation)
-    const MAX_SLIPPAGE_PERCENT = 5.0;
-    let normS = slippageDeviation / MAX_SLIPPAGE_PERCENT;
-    if (normS > 1.0) normS = 1.0;
-    if (normS < 0.0) normS = 0.0;
+    // 2. Price Impact Proxy
+    const priceImpact = slippageDeviation * 0.85;
 
-    // 2. Price Impact Proxy (P)
-    // For this prototype, we mock price impact proportional to the observed slippage
-    // In production, this would compare input size to direct pool liquidity reserves.
-    const priceImpact = slippageDeviation * 0.85; 
-    const MAX_IMPACT_PERCENT = 5.0;
-    let normP = priceImpact / MAX_IMPACT_PERCENT;
-    if (normP > 1.0) normP = 1.0;
-    if (normP < 0.0) normP = 0.0;
-
-    // 3. Gas Sensitivity (G)
-    // Normalize against a high gas phase (e.g. 150 Gwei = max risk)
-    const MAX_GAS_GWEI = 150;
+    // 3. Attacker Economics Evaluation
+    const ethPriceUSDC = inputEth > 0 ? (referenceOutput / inputEth) : 3000;
+    const attackerGrossProfitUSDC = victimOutputLoss > 0 ? victimOutputLoss * extractionEfficiency : 0;
+    
+    // Gas cost mapping
     const gasPriceGwei = Number(gasPriceWei) / 1e9;
-    let normG = gasPriceGwei / MAX_GAS_GWEI;
-    if (normG > 1.0) normG = 1.0;
-    if (normG < 0.0) normG = 0.0;
+    const attackerGasCostEth = (attackerGasProxy * Number(gasPriceWei)) / 1e18;
+    const attackerGasCostUSDC = attackerGasCostEth * ethPriceUSDC;
 
-    // 4. Normalized Risk Score (R)
-    const riskScore = (w1 * normS) + (w2 * normP) + (w3 * normG);
+    const attackerNetProfitUSDC = attackerGrossProfitUSDC - attackerGasCostUSDC;
+
+    // 4. Normalized Ratios relative to trade size
+    let profitabilityRatio = 0;
+    if (referenceOutput > 0 && attackerNetProfitUSDC > 0) {
+        profitabilityRatio = (attackerNetProfitUSDC / referenceOutput) * 100; // Expected profit as % of trade out
+    }
+
+    // 5. New Normalized Risk Score computation based purely on economic ratios
+    // Normalizing assumptions: 
+    // - Profitability ratio > 1.0% of trade size is critically high incentive for MEV bots
+    // - Slippage > 5% is maximum victim harm
+    let normProfit = profitabilityRatio / 1.0;
+    if (normProfit > 1.0) normProfit = 1.0;
+    if (normProfit < 0.0) normProfit = 0.0;
+
+    let normSlippage = slippageDeviation / 5.0;
+    if (normSlippage > 1.0) normSlippage = 1.0;
+    if (normSlippage < 0.0) normSlippage = 0.0;
+
+    // The final risk score represents a weighted combination of profitability (incentive) and slippage (impact)
+    let riskScore = 0;
+    if (attackerNetProfitUSDC > 0) {
+        riskScore = (w1 * normProfit) + (w2 * normSlippage);
+    }
+    if (riskScore > 1.0) riskScore = 1.0;
 
     return {
         raw_slippage_deviation: slippageDeviation,
-        normalized_slippage: normS,
-        raw_price_impact: priceImpact,
-        normalized_price_impact: normP,
-        raw_gas_sensitivity: gasPriceGwei,
-        normalized_gas_sensitivity: normG,
-        weights: { w1, w2, w3 },
+        price_impact: priceImpact,
+        
+        eth_price_estimate: ethPriceUSDC,
+        victim_output_loss_usdc: victimOutputLoss,
+        attacker_gross_profit_usdc: attackerGrossProfitUSDC,
+        attacker_gas_cost_usdc: attackerGasCostUSDC,
+        attacker_net_profit_usdc: attackerNetProfitUSDC,
+        profitability_ratio: profitabilityRatio,
+        
         normalized_risk_score: riskScore
     };
 }

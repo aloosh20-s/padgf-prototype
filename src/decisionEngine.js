@@ -11,16 +11,16 @@ function makeDecision(riskScore, thresholds = { tau1: 0.3, tau2: 0.7 }) {
     
     let decision = "Execute";
     let allowed = true;
-    let reason = "Risk score is below safe threshold. Environment is stable for execution.";
+    let reason = "Execution deemed safe: Attacker profitability relative to trade size is negligible or zero.";
 
     if (riskScore >= tau2) {
         decision = "Block";
         allowed = false;
-        reason = "Critical risk detected. The transaction exhibits high-risk execution characteristics associated with sandwich attack exposure.";
+        reason = "Critical risk detected. Attacker net profitability is highly attractive, exposing the swap to guaranteed economic extraction.";
     } else if (riskScore >= tau1 && riskScore < tau2) {
         decision = "Delay";
         allowed = false;
-        reason = "Elevated risk detected. Postponing pre-broadcast transaction parameters execution to next block.";
+        reason = "Elevated risk detected. Attacker has marginal profitability. Delay recommended until mempool conditions or gas prices shift.";
     }
 
     return {

@@ -27,7 +27,7 @@ async function main() {
         const { weth, usdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, signer);
         const router = await getRouter(ROUTER_ADDRESS, signer);
 
-        const amountInEth = "1.0";
+        const amountInEth = "14";
         const amountIn = hre.ethers.parseUnits(amountInEth, WETH_DECIMALS);
         const path = [WETH_ADDRESS, USDC_ADDRESS];
 
@@ -49,7 +49,7 @@ async function main() {
         const gasPriceWei = feeData.gasPrice || feeData.maxFeePerGas || hre.ethers.parseUnits("50", "gwei");
 
         // 3. Compute Risk Attributes
-        const riskMetrics = calculateRisk(referenceOutput, simulatedOutput, gasPriceWei);
+        const riskMetrics = calculateRisk(amountInEth, referenceOutput, simulatedOutput, gasPriceWei);
         console.log(`Calculated Normalized Risk Score: ${riskMetrics.normalized_risk_score.toFixed(4)}`);
 
         // 4. Apply Decision Engine
@@ -100,8 +100,12 @@ async function main() {
             reference_output: referenceOutput,
             simulated_output: simulatedOutput,
             slippage_deviation: riskMetrics.raw_slippage_deviation.toString(),
-            price_impact: riskMetrics.raw_price_impact.toString(),
-            gas_sensitivity: riskMetrics.raw_gas_sensitivity.toString(),
+            price_impact: riskMetrics.price_impact.toString(),
+            eth_price_estimate: riskMetrics.eth_price_estimate.toString(),
+            attacker_gross_profit_usdc: riskMetrics.attacker_gross_profit_usdc.toString(),
+            attacker_gas_cost_usdc: riskMetrics.attacker_gas_cost_usdc.toString(),
+            attacker_net_profit_usdc: riskMetrics.attacker_net_profit_usdc.toString(),
+            profitability_ratio: riskMetrics.profitability_ratio.toString(),
             normalized_risk_score: riskMetrics.normalized_risk_score.toString(),
             threshold_values: decisionResult.thresholds,
             padgf_decision: decisionResult.decision,

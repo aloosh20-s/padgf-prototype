@@ -12,9 +12,9 @@ const displayMenu = () => {
     console.log("=========================================");
     console.log("   PADGF Prototype - Practical Evaluation");
     console.log("=========================================");
-    console.log("1. Run Phase 1: Baseline Swap");
-    console.log("2. Run Phase 2: Sandwich Attack Simulation");
-    console.log("3. Run Phase 3: PADGF Protected Swap");
+    console.log("1. Run: Baseline Swap");
+    console.log("2. Run : Sandwich Attack Simulation");
+    console.log("3. Run : PADGF Protected Swap");
     console.log("4. View Latest Results");
     console.log("5. Exit");
     console.log("=========================================");
@@ -84,7 +84,6 @@ function printSummaryTable(data) {
     console.log(`Simulated Output   : ${data.simulated_output} USDC`);
     console.log(`Slippage Deviation : ${parseFloat(data.slippage_deviation).toFixed(4)}%`);
     console.log(`Price Impact       : ${parseFloat(data.price_impact).toFixed(4)}%`);
-    console.log(`Gas Sensitivity    : ${parseFloat(data.gas_sensitivity).toFixed(2)} Gwei`);
     console.log(`Risk Score         : ${parseFloat(data.normalized_risk_score).toFixed(4)}`);
     console.log(`PADGF Decision     : ${data.padgf_decision}`);
     console.log(`Execution Allowed  : ${data.execution_allowed}`);

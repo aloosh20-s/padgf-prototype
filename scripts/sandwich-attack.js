@@ -35,11 +35,11 @@ async function main() {
         const attackerRouter = await getRouter(ROUTER_ADDRESS, attackerSigner);
 
         // Define swap amounts
-        const victimAmountInEth = "1.0";
+        const victimAmountInEth = "14";
         const victimAmountIn = hre.ethers.parseUnits(victimAmountInEth, WETH_DECIMALS);
 
         // Attacker uses slightly more capital to significantly shift the pool
-        const attackerAmountInEth = "5.0";
+        const attackerAmountInEth = "70.0";
         const attackerAmountIn = hre.ethers.parseUnits(attackerAmountInEth, WETH_DECIMALS);
 
         // Cheat to give attacker WETH
@@ -47,10 +47,10 @@ async function main() {
         // to give the attacker raw ETH, and then wrap it into WETH directly via the WETH contract.
         await hre.network.provider.send("hardhat_setBalance", [
             attackerSigner.address,
-            "0x8AC7230489E80000" // 10 ETH
+            "0x56BC75E2D63100000" // 100 ETH
         ]);
 
-        // Wrap 5.0 ETH into WETH
+        // Wrap 70.0 ETH into WETH
         const WETH_ABI_WRAP = ["function deposit() public payable"];
         const attackerWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, attackerSigner);
         await attackerWethContract.deposit({
@@ -72,8 +72,8 @@ async function main() {
         const victimUsdcBefore = await victimUsdc.balanceOf(victimSigner.address);
         const attackerWethBefore = await attackerWeth.balanceOf(attackerSigner.address);
 
-        const slippageTolerance = 1; // Victim uses 1% slippage
-        const attackerSlippage = 5;  // Attacker allows more to guarantee their own moves
+        const slippageTolerance = 15; // Victim uses 15% slippage
+        const attackerSlippage = 15;  // Attacker allows more to guarantee their own moves
 
         // 3. ATTACT STEP 1: Attacker Front-run 
         // Attacker buys USDC with WETH, raising the price of USDC

@@ -176,7 +176,13 @@ async function runProtected() {
     // If the input is small, volatility is low (Execute). 
     // If input is medium (10-25), volatility triggers moderate impact (Delay).
     // If input is high (50+), volatility triggers severe impact (Block).
-    const volatilityMultiplier = Number(CUSTOM_AMOUNT) >= 10 ? (Number(CUSTOM_AMOUNT) >= 50 ? 50 : 20) : 0;
+    const amt = Number(CUSTOM_AMOUNT);
+    let volatilityMultiplier = 0;
+    if (amt >= 8 && amt < 25) {
+        volatilityMultiplier = 5; // generates 50 ETH front-run for 10 ETH input, yielding ~0.4 score
+    } else if (amt >= 25) {
+        volatilityMultiplier = 30; // generates >750 ETH front-run, yielding >0.7 score
+    }
     
     if (volatilityMultiplier > 0) {
         const signers = await hre.ethers.getSigners();
@@ -213,7 +219,7 @@ async function runProtected() {
     const feeData = await hre.ethers.provider.getFeeData();
     const gasPriceWei = feeData.gasPrice || feeData.maxFeePerGas || hre.ethers.parseUnits("50", "gwei");
 
-    const riskMetrics = calculateRisk(referenceOutput, simulatedOutput, gasPriceWei);
+    const riskMetrics = calculateRisk(CUSTOM_AMOUNT, referenceOutput, simulatedOutput, gasPriceWei);
     const decisionResult = makeDecision(riskMetrics.normalized_risk_score, { tau1: 0.3, tau2: 0.7 });
 
     let executionStatus = decisionResult.decision;
@@ -244,8 +250,12 @@ async function runProtected() {
         simulated_output: simulatedOutput,
         actual_output: finalOut,
         slippage_deviation: riskMetrics.raw_slippage_deviation.toString(),
-        price_impact: riskMetrics.raw_price_impact.toString(),
-        gas_sensitivity: riskMetrics.raw_gas_sensitivity.toString(),
+        price_impact: riskMetrics.price_impact.toString(),
+        eth_price_estimate: riskMetrics.eth_price_estimate.toString(),
+        attacker_gross_profit_usdc: riskMetrics.attacker_gross_profit_usdc.toString(),
+        attacker_gas_cost_usdc: riskMetrics.attacker_gas_cost_usdc.toString(),
+        attacker_net_profit_usdc: riskMetrics.attacker_net_profit_usdc.toString(),
+        profitability_ratio: riskMetrics.profitability_ratio.toString(),
         normalized_risk_score: riskMetrics.normalized_risk_score.toString(),
         threshold_values: decisionResult.thresholds,
         padgf_decision: decisionResult.decision,
