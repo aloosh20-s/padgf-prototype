@@ -5,12 +5,12 @@
   "dex": "Uniswap V2",
   "input_token": "WETH",
   "output_token": "USDC",
-  "input_amount": "1.0",
+  "input_amount": "10",
   "slippage_tolerance": "1%",
-  "expected_output": "3899.684203",
-  "actual_output": "3899.684203",
-  "gas_used": "108507",
-  "transaction_hash": "0x9c6a93a39cff66e19d13caa18853b8da427af27be2b0d977942fea780d06b745",
+  "expected_output": "38968.559488",
+  "actual_output": "38968.559488",
+  "gas_used": "108531",
+  "transaction_hash": "0xe1b6aca749a06bd4a5ba39de164d633c6c2c7f0f4f7162732d17618d8e8453dd",
   "execution_status": "success",
-  "timestamp": "2026-06-11T21:59:50.748Z"
+  "timestamp": "2026-06-14T22:42:26.459Z"
 }

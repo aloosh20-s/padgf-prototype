@@ -171,23 +171,23 @@ async function runProtected() {
     const referenceOutput = hre.ethers.formatUnits(referenceQuoteWei, USDC_DECIMALS);
 
     // --- Dynamic Mempool Volatility Injection ---
-    // To authentically test organic PADGF thresholds based on user inputs,
-    // we simulate mempool volatility (front-running transaction) proportional to the input.
-    // If the input is small, volatility is low (Execute). 
-    // If input is medium (10-25), volatility triggers moderate impact (Delay).
-    // If input is high (50+), volatility triggers severe impact (Block).
+    // Continuous adversarial volume model: smooth quadratic scaling
+    // replaces discrete multiplier tiers to produce gradual risk transitions.
+    // Formula: frontrunVolume = 0.5 × amt²
+    //   5 ETH  → ~12 ETH   (minimal stress → Execute region)
+    //   10 ETH → ~50 ETH   (moderate stress → Delay region)
+    //   20 ETH → ~200 ETH  (elevated stress → Delay region)
+    //   30 ETH → ~450 ETH  (high stress → Block region)
     const amt = Number(CUSTOM_AMOUNT);
-    let volatilityMultiplier = 0;
-    if (amt >= 8 && amt < 25) {
-        volatilityMultiplier = 5; // generates 50 ETH front-run for 10 ETH input, yielding ~0.4 score
-    } else if (amt >= 25) {
-        volatilityMultiplier = 30; // generates >750 ETH front-run, yielding >0.7 score
+    let frontrunVolume = 0;
+    if (amt >= 5) {
+        frontrunVolume = 0.5 * amt * amt;
     }
     
-    if (volatilityMultiplier > 0) {
+    if (frontrunVolume > 0) {
         const signers = await hre.ethers.getSigners();
         const mockAttacker = signers[2];
-        const volatilityVol = (Number(CUSTOM_AMOUNT) * volatilityMultiplier).toString();
+        const volatilityVol = frontrunVolume.toFixed(1);
         
         console.log(`[Simulation] Inducing mempool state change: ${volatilityVol} WETH traded ahead...`);
         const { weth: aWeth } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, mockAttacker);

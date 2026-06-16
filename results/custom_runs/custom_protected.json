@@ -5,19 +5,19 @@
   "dex": "Uniswap V2",
   "input_token": "WETH",
   "output_token": "USDC",
-  "input_amount": "20",
+  "input_amount": "30",
   "slippage_tolerance": "1%",
-  "reference_output": "77748.820379",
-  "simulated_output": "76509.899737",
-  "actual_output": "76509.899737",
-  "slippage_deviation": "1.5934912400736956",
-  "price_impact": "1.3544675540626412",
-  "eth_price_estimate": "3887.44101895",
-  "attacker_gross_profit_usdc": "1053.0825456999976",
-  "attacker_gas_cost_usdc": "28.615432689432396",
-  "attacker_net_profit_usdc": "1024.4671130105653",
-  "profitability_ratio": "1.3176625806238913",
-  "normalized_risk_score": "0.7274792992058956",
+  "reference_output": "106311.746643",
+  "simulated_output": "99311.450793",
+  "actual_output": "99311.450793",
+  "slippage_deviation": "6.584687084022184",
+  "price_impact": "5.596984021418856",
+  "eth_price_estimate": "3543.7248881",
+  "attacker_gross_profit_usdc": "6958.294074900009",
+  "attacker_gas_cost_usdc": "3.1918535877798893",
+  "attacker_net_profit_usdc": "692.6375539022206",
+  "profitability_ratio": "0.6515155434593047",
+  "normalized_risk_score": "0.7909093260755828",
   "threshold_values": {
     "tau1": 0.3,
     "tau2": 0.7
@@ -26,5 +26,5 @@
   "execution_allowed": false,
   "execution_status": "Block",
   "transaction_hash": "",
-  "timestamp": "2026-06-10T22:35:23.580Z"
+  "timestamp": "2026-06-14T22:45:04.360Z"
 }

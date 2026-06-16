@@ -1,5 +1,5 @@
 /**
- * Exploratory Realistic User-Driven Evaluation Mode
+ * Exploratory User-Driven Evaluation Mode
  * This mode demonstrates how PADGF operates in a wallet-style user interface.
  * It does not overwrite official thesis data. Outputs are saved to results/custom_runs/.
  */
@@ -61,11 +61,16 @@ async function run() {
     const tau1 = 0.3;
     const tau2 = 0.7;
 
+    // Continuous adversarial volume model: smooth quadratic scaling
+    // replaces discrete multiplier tiers to produce gradual risk transitions.
+    // Formula: frontrunVolume = 0.5 × amt²
+    //   5 ETH  → ~12 ETH   (minimal stress)
+    //   10 ETH → ~50 ETH   (moderate stress)
+    //   20 ETH → ~200 ETH  (elevated stress)
+    //   30 ETH → ~450 ETH  (high stress)
     let volatilityVol = 0;
-    if (amountVal >= 8 && amountVal < 25) {
-        volatilityVol = (amountVal * 5).toString(); // 5x multiplier matches custom-run
-    } else if (amountVal >= 25) {
-        volatilityVol = (amountVal * 30).toString(); // 30x multiplier matches custom-run
+    if (amountVal >= 5) {
+        volatilityVol = (0.5 * amountVal * amountVal).toFixed(1);
     }
 
     if (volatilityVol > 0) {
@@ -116,7 +121,7 @@ async function run() {
 
     // Base result structure
     let result = {
-        run_type: "Exploratory Realistic User-Driven Evaluation Mode",
+        run_type: "Exploratory User-Driven Evaluation Mode",
         official_thesis_data: false,
         exploratory_only: true,
         input_amount: CUSTOM_AMOUNT,

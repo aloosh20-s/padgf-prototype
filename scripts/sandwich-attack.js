@@ -39,7 +39,7 @@ async function main() {
         const victimAmountIn = hre.ethers.parseUnits(victimAmountInEth, WETH_DECIMALS);
 
         // Attacker uses slightly more capital to significantly shift the pool
-        const attackerAmountInEth = "70.0";
+        const attackerAmountInEth = "60.0";
         const attackerAmountIn = hre.ethers.parseUnits(attackerAmountInEth, WETH_DECIMALS);
 
         // Cheat to give attacker WETH
@@ -72,7 +72,7 @@ async function main() {
         const victimUsdcBefore = await victimUsdc.balanceOf(victimSigner.address);
         const attackerWethBefore = await attackerWeth.balanceOf(attackerSigner.address);
 
-        const slippageTolerance = 15; // Victim uses 15% slippage
+        const slippageTolerance = 1; // Victim uses 1% slippage (matching baseline)
         const attackerSlippage = 15;  // Attacker allows more to guarantee their own moves
 
         // 3. ATTACT STEP 1: Attacker Front-run 
