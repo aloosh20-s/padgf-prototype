@@ -13,8 +13,8 @@
   "attacker_gas_used": "243851",
   "victim_gas_used": "108531",
   "frontrun_hash": "0x16df6146f7b6bc990a71270829a380d457913fa03481ed3967e9d77330f834d5",
-  "victim_hash": "0xb56cb3aa6f9b5991be529151c36e3eec6c1c376dbead1af90b345a3ba62a2bdb",
-  "backrun_hash": "0x1b375ce13b7c6a5739becfdec836e0e0c71343f8bf0494921bba867cce4041be",
+  "victim_hash": "0x70eb802a8a81c4c853494900d6f0e41c26669c8e578b9b5453683d844de8de2e",
+  "backrun_hash": "0xc727f67bb8231335e879eb7bb1383823a978e2b9a41a41a5114d5b99315353f5",
   "execution_status": "success",
-  "timestamp": "2026-06-14T22:41:43.524Z"
+  "timestamp": "2026-06-17T21:43:26.097Z"
 }

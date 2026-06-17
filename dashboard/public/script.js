@@ -97,37 +97,57 @@ function updateStatusPanel(data) {
     setStatus("status-phase3", data.protected);
 }
 
+let chartInstances = {};
+
 function renderChart(data) {
     const chartContainer = document.getElementById("bar-chart");
     if (!chartContainer) return;
-    chartContainer.innerHTML = '';
+    chartContainer.innerHTML = '<canvas id="mainChartCanvas"></canvas>';
+
+    const ctx = document.getElementById("mainChartCanvas").getContext("2d");
 
     const v1 = data.baseline ? parseFloat(data.baseline.actual_output || data.baseline.expected_output) : 0;
     const v2 = data.sandwich ? parseFloat(data.sandwich.attacked_actual_output) : 0;
     const v3 = data.protected ? parseFloat(data.protected.actual_output || data.protected.simulated_output) : 0;
 
-    const values = [v1, v2, v3];
-    const validValues = values.filter(v => v > 0);
-    const minVal = validValues.length ? Math.min(...validValues) - 5 : 0;
-    const maxVal = validValues.length ? Math.max(...validValues) + 5 : 100;
+    if (chartInstances["bar-chart"]) {
+        chartInstances["bar-chart"].destroy();
+    }
 
-    const createBar = (label, value) => {
-        if (!value) return '<div class="bar-wrapper"></div>';
-        const heightPct = Math.max(5, ((value - minVal) / (maxVal - minVal)) * 100);
-        return `
-            <div class="bar-wrapper">
-                <div class="bar-value">${value.toFixed(2)}</div>
-                <div class="bar" style="height: ${heightPct}%;"></div>
-                <div class="bar-label">${label}</div>
-            </div>
-        `;
-    };
-
-    chartContainer.innerHTML = `
-        ${createBar("Baseline", v1)}
-        ${createBar("Sandwich Attack", v2)}
-        ${createBar("PADGF Protected", v3)}
-    `;
+    chartInstances["bar-chart"] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Baseline', 'Sandwich Attack', 'PADGF Protected'],
+            datasets: [{
+                label: 'USDC Output',
+                data: [v1, v2, v3],
+                backgroundColor: [
+                    'rgba(56, 189, 248, 0.7)',
+                    'rgba(239, 68, 68, 0.7)',
+                    'rgba(34, 197, 94, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(56, 189, 248, 1)',
+                    'rgba(239, 68, 68, 1)',
+                    'rgba(34, 197, 94, 1)'
+                ],
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
 }
 
 async function runPhase(phaseRoute) {
@@ -272,7 +292,10 @@ function renderCustomResult(result) {
 function renderCustomChart(result, targetId = "custom-bar-chart") {
     const chartContainer = document.getElementById(targetId);
     if (!chartContainer) return;
-    chartContainer.innerHTML = '';
+    const canvasId = targetId + "-canvas";
+    chartContainer.innerHTML = '<canvas id="' + canvasId + '"></canvas>';
+    
+    const ctx = document.getElementById(canvasId).getContext("2d");
 
     let labels = [];
     let values = [];
@@ -313,30 +336,36 @@ function renderCustomChart(result, targetId = "custom-bar-chart") {
         if (result.actual_output) { labels.push("Actual"); values.push(parseFloat(result.actual_output)); }
     }
 
-    const validValues = values.filter(v => !isNaN(v) && v > 0);
-    if (validValues.length === 0) return;
-
-    const minVal = Math.min(...validValues) - (Math.min(...validValues) * 0.05);
-    const maxVal = Math.max(...validValues) + (Math.max(...validValues) * 0.05);
-
-    const createBar = (label, value) => {
-        if (!value) return '<div class="bar-wrapper"></div>';
-        const heightPct = Math.max(5, ((value - minVal) / (maxVal - minVal)) * 100);
-        return `
-            <div class="bar-wrapper">
-                <div class="bar-value">${value.toFixed(2)}</div>
-                <div class="bar" style="height: ${heightPct}%;"></div>
-                <div class="bar-label" style="font-size: 11px;">${label}</div>
-            </div>
-        `;
-    };
-
-    let innerHTML = '';
-    for (let i = 0; i < values.length; i++) {
-        innerHTML += createBar(labels[i], values[i]);
+    if (chartInstances[targetId]) {
+        chartInstances[targetId].destroy();
     }
-    
-    chartContainer.innerHTML = innerHTML;
+
+    chartInstances[targetId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'USDC Output',
+                data: values,
+                backgroundColor: 'rgba(56, 189, 248, 0.7)',
+                borderColor: 'rgba(56, 189, 248, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
 }
 
 // =================== SECTION 3: USER-DRIVEN EXPLORATORY MODE ===================
