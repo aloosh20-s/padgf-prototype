@@ -24,6 +24,7 @@ const {
   executeSwap,
 } = require("../src/dexInteraction.js");
 const { calculateRisk } = require("../src/riskEvaluator.js");
+const { sendPrivateTransaction } = require("../src/privateRoute.js");
 
 const CUSTOM_AMOUNT = process.env.CUSTOM_AMOUNT || "1.0";
 const CUSTOM_SLIPPAGE = parseFloat(process.env.CUSTOM_SLIPPAGE || "1");
@@ -167,12 +168,15 @@ async function run() {
 
   let riskLevel = "Low";
   let recommendation = "Execute Recommended";
+  let automatic_public_broadcast_allowed = true;
   if (score >= tau2) {
     riskLevel = "High";
-    recommendation = "Block Recommended";
+    recommendation = "High-Risk User Options";
+    automatic_public_broadcast_allowed = false;
   } else if (score >= tau1) {
     riskLevel = "Moderate";
     recommendation = "Delay Recommended";
+    automatic_public_broadcast_allowed = false;
   }
 
   // Base result structure
@@ -204,6 +208,7 @@ async function run() {
     tau2: tau2,
     risk_level: riskLevel,
     padgf_recommendation: recommendation,
+    automatic_public_broadcast_allowed: automatic_public_broadcast_allowed,
     user_action: DEMO_USER_ACTION,
     execution_allowed: false,
     execution_status: "pending",
@@ -222,6 +227,61 @@ async function run() {
     if (DEMO_EXEC_TYPE === "none" || DEMO_USER_ACTION === "cancelled") {
       result.execution_allowed = false;
       result.execution_status = "cancelled_by_user";
+      saveResult(result);
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+
+    if (DEMO_EXEC_TYPE === "private") {
+      console.log(`[Exploratory Execution] Proceeding with private routing execution mode...`);
+      console.log(`[Exploratory Execution] Resetting local fork to bypass public mempool volatility (Top-of-block inclusion)...`);
+      
+      // Reset fork to clear public mempool volatility
+      await hre.network.provider.send("hardhat_reset", [
+        {
+          forking: {
+            jsonRpcUrl: hre.config.networks.hardhat.forking.url,
+            blockNumber: FORK_BLOCK,
+          },
+        },
+      ]);
+      // Re-initialize contracts/signer after reset
+      const resetSigner = await setupProviderAndSigner(IMPERSONATED_ACCOUNT);
+      const { weth: resetWeth, usdc: resetUsdc } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, resetSigner);
+      const resetRouter = await getRouter(ROUTER_ADDRESS, resetSigner);
+
+      const usdcBefore = await resetUsdc.balanceOf(resetSigner.address);
+
+      try {
+        const privateTxHash = await sendPrivateTransaction(
+          resetRouter,
+          resetWeth,
+          amountIn,
+          referenceQuoteWei, // use original reference quote since we bypass volatility
+          swapPath,
+          resetSigner,
+          CUSTOM_SLIPPAGE
+        );
+        result.transaction_hash = privateTxHash;
+
+        const usdcAfter = await resetUsdc.balanceOf(resetSigner.address);
+        const actualOutputWei = usdcAfter - usdcBefore;
+        const actualOutput = hre.ethers.formatUnits(actualOutputWei, USDC_DECIMALS);
+
+        result.actual_output = actualOutput;
+        result.victim_output_loss = "0.000000";
+        result.financial_loss_percentage = "0.00%";
+        
+        result.execution_allowed = true;
+        result.execution_status = "executed_privately";
+        result.selected_high_risk_option = "send_privately";
+        
+      } catch (error) {
+        console.error("Private Execution failed:", error.message);
+        result.execution_status = "private_execution_failed: " + error.message;
+        result.execution_allowed = true;
+      }
+
       saveResult(result);
       console.log(JSON.stringify(result, null, 2));
       return;

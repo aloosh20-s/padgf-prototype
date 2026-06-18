@@ -6,10 +6,10 @@
   "output_token": "USDC",
   "input_amount": "14",
   "reference_output": "54538.403686",
-  "simulated_output": "54538.403686",
-  "slippage_deviation": "0",
-  "price_impact": "0",
-  "normalized_risk_score": "0",
+  "simulated_output": "53685.631921",
+  "slippage_deviation": "1.5636170246378225",
+  "price_impact": "1.3290744709421491",
+  "normalized_risk_score": "0.17756566818256833",
   "threshold_values": {
     "tau1": 0.3,
     "tau2": 0.7
@@ -17,6 +17,6 @@
   "padgf_decision": "Execute",
   "execution_allowed": true,
   "execution_status": "success",
-  "transaction_hash": "0xbd9c73e07d7e360a715262fe564c0e3cb779f0fcf699a1043adf5c27428e4400",
-  "timestamp": "2026-06-14T22:42:01.249Z"
+  "transaction_hash": "0xa14ce3b5cd43f2f34b98057e1d3af0bc43ced15220106b09cd6450e651b1abf8",
+  "timestamp": "2026-06-18T19:31:07.350Z"
 }

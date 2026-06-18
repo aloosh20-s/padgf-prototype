@@ -85,34 +85,6 @@ const server = http.createServer(async (req, res) => {
     } else if (req.method === 'POST' && req.url === '/api/run/phase3') {
         runScript('protected-swap.js', res);
 
-    // Custom exploratory run
-    } else if (req.method === 'POST' && req.url === '/api/run/custom') {
-        const body = await parseBody(req);
-        const amount = body.amount || '1.0';
-        const slippage = body.slippage || '1';
-        const scenario = body.scenario || 'baseline';
-
-        const cwd = path.join(__dirname, '..');
-        const envVars = `set CUSTOM_AMOUNT=${amount}&& set CUSTOM_SLIPPAGE=${slippage}&& set CUSTOM_SCENARIO=${scenario}&& `;
-        const cmd = `${envVars}npx hardhat run scripts/custom-run.js --network localhost`;
-
-        exec(cmd, { cwd, shell: 'cmd.exe' }, (error, stdout, stderr) => {
-            if (error) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: error.message, stderr }));
-                return;
-            }
-            // Read the custom result file
-            let resultData = null;
-            const fileMap = { baseline: 'custom_baseline.json', sandwich: 'custom_sandwich.json', protected: 'custom_protected.json' };
-            try {
-                resultData = JSON.parse(fs.readFileSync(path.join(customDir, fileMap[scenario])));
-            } catch (e) { /* ignore */ }
-
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, stdout, result: resultData }));
-        });
-
     // User-Driven Evaluation - Evaluate Stage
     } else if (req.method === 'POST' && req.url === '/api/run/user-driven-evaluate') {
         const body = await parseBody(req);
@@ -217,20 +189,6 @@ const server = http.createServer(async (req, res) => {
                 }));
             }
         });
-
-    // Read latest custom results
-    } else if (req.method === 'GET' && req.url === '/api/custom-results') {
-        const safeRead = (filename) => {
-            try { return JSON.parse(fs.readFileSync(path.join(customDir, filename))); }
-            catch { return null; }
-        };
-        const payload = {
-            baseline: safeRead('custom_baseline.json'),
-            sandwich: safeRead('custom_sandwich.json'),
-            protected: safeRead('custom_protected.json')
-        };
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(payload));
 
     // Download files
     } else if (req.method === 'GET' && req.url.startsWith('/api/download/')) {

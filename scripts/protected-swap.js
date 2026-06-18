@@ -52,6 +52,35 @@ async function main() {
     );
     console.log(`Reference Output: ${referenceOutput} USDC`);
 
+    // --- Dynamic Mempool Volatility Injection ---
+    const signers = await hre.ethers.getSigners();
+    const amountVal = Number(amountInEth);
+    let volatilityVol = 0;
+    if (amountVal >= 5) {
+      volatilityVol = (0.5 * amountVal * amountVal).toFixed(1);
+    }
+
+    if (volatilityVol > 0) {
+      console.log(`[Simulation] Generating controlled manipulated-pool-state condition: ${volatilityVol} WETH traded ahead...`);
+      const mockAttacker = signers[2];
+      const { weth: aWeth } = await getTokens(WETH_ADDRESS, USDC_ADDRESS, mockAttacker);
+      const aRouter = await getRouter(ROUTER_ADDRESS, mockAttacker);
+      const aAmountIn = hre.ethers.parseUnits(volatilityVol, WETH_DECIMALS);
+
+      await hre.network.provider.send("hardhat_setBalance", [mockAttacker.address, "0x152D02C7E14AF6800000"]); // 100,000 ETH
+      const WETH_ABI_WRAP = ["function deposit() public payable"];
+      const aWethContract = new hre.ethers.Contract(WETH_ADDRESS, WETH_ABI_WRAP, mockAttacker);
+      await aWethContract.deposit({ value: aAmountIn, gasLimit: 100000, maxFeePerGas: hre.ethers.parseUnits("300", "gwei"), maxPriorityFeePerGas: hre.ethers.parseUnits("2", "gwei") });
+
+      try {
+        const aQuote = await getQuote(aRouter, aAmountIn, path);
+        await executeSwap(aRouter, aWeth, aAmountIn, aQuote, path, mockAttacker, 10);
+      } catch (e) {
+        console.log("[Simulation] Volatility induction hit pool limits, proceeding with max available stress.");
+      }
+    }
+    // -------------------------------------------
+
     // 2. Pre-Broadcast Simulation
     // We evaluate pre-broadcast transaction parameters before the transaction enters the public mempool.
     console.log("Analyzing pre-broadcast transaction parameters...");

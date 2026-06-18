@@ -175,120 +175,6 @@ async function runPhase(phaseRoute) {
 
 // =================== SECTION 2: CUSTOM RUNS ===================
 
-async function runCustom() {
-    let amount = document.getElementById("custom-amount").value;
-    if (amount === "other") {
-        amount = document.getElementById("custom-amount-custom").value;
-        if (!amount || isNaN(amount) || amount <= 0) {
-            alert("Please enter a valid numeric amount greater than 0.");
-            return;
-        }
-    }
-    const slippage = document.getElementById("custom-slippage").value;
-    const scenario = document.getElementById("custom-scenario").value;
-
-    const btn = document.getElementById("btn-custom-run");
-    btn.disabled = true;
-    btn.textContent = "Running...";
-    updateConsole("custom-console", `[Exploratory Test] Running ${scenario} | ${amount} WETH | ${slippage}% slippage...`);
-
-    try {
-        const response = await fetch('/api/run/custom', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount, slippage, scenario })
-        });
-        const data = await response.json();
-
-        if (data.stdout) {
-            updateConsole("custom-console", `[SYSTEM OUTPUT]\n\n${data.stdout}`);
-        }
-        if (data.error) {
-            updateConsole("custom-console", `[ERROR]\n\n${data.error}\n${data.stderr || ''}`);
-        }
-
-        if (data.result) {
-            renderCustomResult(data.result);
-        }
-    } catch (e) {
-        updateConsole("custom-console", "Execution Failure: " + e.message);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = "Run Exploratory Test";
-    }
-}
-
-function renderCustomResult(result) {
-    const panel = document.getElementById("custom-result-panel");
-    const tbody = document.querySelector("#custom-result-table tbody");
-    tbody.innerHTML = "";
-    panel.style.display = "block";
-
-    // Build metric rows dynamically based on what fields exist
-    const rows = [
-        ["Run Type", result.run_type || result.demo_type || "Custom Run"],
-        ["Scenario", result.scenario],
-        ["Fork Block", result.fork_block || "19400000 (Thesis Default)"],
-        ["DEX", result.dex || "Uniswap V2"],
-        ["Token Pair", result.input_token ? `${result.input_token} → ${result.output_token}` : "WETH → USDC"],
-        ["Input Amount", typeof result.input_amount === 'string' ? result.input_amount : `${result.input_amount || result.victim_input_amount || 0} WETH`],
-        ["Slippage Tolerance", result.slippage_tolerance],
-    ];
-
-    // Scenario-specific fields
-    if (result.expected_output) rows.push(["Expected Output", `${result.expected_output} USDC`]);
-    if (result.actual_output) rows.push(["Actual Output", `${result.actual_output} USDC`]);
-    if (result.reference_output) rows.push(["Reference Output", `${result.reference_output} USDC`]);
-    if (result.simulated_output) rows.push(["Simulated Output", `${result.simulated_output} USDC`]);
-    if (result.baseline_expected_output) rows.push(["Baseline Expected Output", `${result.baseline_expected_output} USDC`]);
-    if (result.attacked_actual_output) rows.push(["Attacked Actual Output", `${result.attacked_actual_output} USDC`]);
-    if (result.victim_output_loss) rows.push(["Victim Loss", `${result.victim_output_loss} USDC`]);
-    if (result.financial_loss_percentage) rows.push(["Financial Loss", result.financial_loss_percentage]);
-    if (result.slippage_deviation) rows.push(["Slippage Deviation", `${parseFloat(result.slippage_deviation).toFixed(4)}%`]);
-    if (result.gas_used) rows.push(["Gas Used", result.gas_used]);
-    if (result.victim_gas_used) rows.push(["Victim Gas Used", result.victim_gas_used]);
-    if (result.attacker_gas_used) rows.push(["Attacker Gas Used", result.attacker_gas_used]);
-    
-    if (result.attacker_gross_profit_usdc !== undefined) rows.push(["Attacker Gross Profit", `${parseFloat(result.attacker_gross_profit_usdc).toFixed(4)} USDC`]);
-    if (result.attacker_gas_cost_usdc !== undefined) rows.push(["Attacker Gas Cost", `${parseFloat(result.attacker_gas_cost_usdc).toFixed(4)} USDC`]);
-    if (result.attacker_net_profit_usdc !== undefined) rows.push(["Attacker Net Profit", `${parseFloat(result.attacker_net_profit_usdc).toFixed(4)} USDC`]);
-    if (result.profitability_ratio !== undefined) {
-        let pRatio = String(result.profitability_ratio);
-        rows.push(["Profitability Ratio", pRatio.includes('%') ? pRatio : `${parseFloat(pRatio).toFixed(4)}%`]);
-    }
-
-    // Demo mode fields
-    if (result.tau1 !== undefined) rows.push(["Threshold tau1", result.tau1]);
-    if (result.tau2 !== undefined) rows.push(["Threshold tau2", result.tau2]);
-    if (result.normalized_risk_score !== undefined) rows.push(["Risk Score (Exposure Estimate)", parseFloat(result.normalized_risk_score).toFixed(4)]);
-
-    if (result.decision) rows.push(["PADGF Decision", result.decision]);
-    else if (result.padgf_decision) rows.push(["PADGF Risk-Aware Decision", result.padgf_decision]);
-    if (result.explanation) rows.push(["Explanation", result.explanation]);
-
-    if (result.execution_allowed !== undefined) rows.push(["Execution Allowed", String(result.execution_allowed)]);
-    if (result.transaction_hash) rows.push(["Transaction Hash", result.transaction_hash || "N/A"]);
-
-    if (result.execution_status) rows.push(["Execution Status", result.execution_status]);
-    if (result.timestamp) rows.push(["Timestamp", result.timestamp]);
-
-    rows.forEach(([label, value]) => {
-        const tr = document.createElement("tr");
-        if (value === "Delay") {
-            tr.innerHTML = `<td class="metric-name">${label}</td><td><span style="color:#d35400; font-weight:bold;">${value}</span></td>`;
-        } else {
-            let cls = "";
-            if (value === "success" || value === "Execute" || value === "true") cls = "status-success";
-            else if (value === "Block" || value === "false" || (String(label).includes("Victim Loss") && parseFloat(value) > 0)) cls = "status-error";
-
-            tr.innerHTML = `<td class="metric-name">${label}</td><td><span class="${cls}">${value}</span></td>`;
-        }
-        tbody.appendChild(tr);
-    });
-
-    renderCustomChart(result);
-}
-
 function renderCustomChart(result, targetId = "custom-bar-chart") {
     const chartContainer = document.getElementById(targetId);
     if (!chartContainer) return;
@@ -553,11 +439,12 @@ async function runUserDrivenEvaluate() {
                 wText.textContent = "Warning: PADGF has identified high-risk transaction conditions that may expose the swap to sandwich attack behavior. Continuing may result in reduced output or financial loss. Do you want to continue?";
                 wp.style.borderColor = badgeColor;
                 
-                // Inject High-risk buttons: Cancel + Continue
+                // Inject High-risk buttons: Cancel + Private + Continue
                 const controlsDiv = document.getElementById("ud-controls");
                 controlsDiv.innerHTML = `
                     <button id="btn-ud-cancel" onclick="udUserDecision('cancel')" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">Cancel Transaction</button>
-                    <button id="btn-ud-continue" class="secondary" onclick="udUserDecision('continue')">Continue Transaction</button>
+                    <button id="btn-ud-private" onclick="udUserDecision('private')" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;">Send Privately</button>
+                    <button id="btn-ud-continue" class="secondary" onclick="udUserDecision('continue')">Proceed anyway with warning</button>
                 `;
                 document.getElementById("ud-delay-timer").style.display = "none";
                 
@@ -622,6 +509,12 @@ async function udUserDecision(choice, autoActionOverride = null) {
         document.getElementById("ud-warning-panel").style.display = "none";
         document.getElementById("ud-delay-timer").style.display = "none";
         updateConsole("ud-console", "[Exploratory Mode] User cancelled the transaction.");
+    } else if (choice === 'private') {
+        userAction = "sent_privately";
+        executionType = "private";
+        document.getElementById("ud-warning-panel").style.display = "none";
+        document.getElementById("ud-delay-timer").style.display = "none";
+        updateConsole("ud-console", "[Exploratory Mode] User elected to send transaction via private relay. Routing to private RPC...");
     } else if (choice === 'delay') {
         // Delay completed - execute normally
         userAction = autoActionOverride || "delayed_then_executed";
@@ -737,9 +630,11 @@ function renderUdResult(result) {
             else if (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning" || value === "delayed_then_executed") cls = "status-pending"; // generic yellow/orange
             else if (value.includes("High") || value.includes("Block") || value === "accepted_high_warning" || value === "executed_after_high_risk_warning" || value === "continued_despite_warning" || value === "executed_after_warning") cls = "status-error";
             else if (value.includes("cancel")) cls = "status-pending"; // gray or default
+            else if (value.includes("private") || value === "sent_privately" || value === "executed_privately") cls = "status-success";
             
             styledValue = `<span class="${cls}" ${cls === "status-pending" && (value.includes("Moderate") || value.includes("Delay") || value === "accepted_delay_warning" || value === "executed_after_delay_warning" || value === "delayed_then_executed" || value === "continued_despite_warning" || value === "executed_after_warning") ? 'style="color:#d35400; font-weight:bold;"' : ''}>${value}</span>`;
             if (value.includes("cancel")) styledValue = `<span style="color:#7f8c8d; font-weight:bold;">${value}</span>`;
+            if (value.includes("private") || value === "sent_privately" || value === "executed_privately") styledValue = `<span style="color:#8b5cf6; font-weight:bold;">${value}</span>`;
         }
         
         tr.innerHTML = `<td class="metric-name">${label}</td><td>${styledValue}</td>`;
