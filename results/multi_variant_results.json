@@ -1,0 +1,178 @@
+[
+  {
+    "victim_input_weth": 0.5,
+    "attacker_volatility_weth": 0,
+    "reference_output_usdc": "1949.920724",
+    "simulated_output_usdc": "1949.920724",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 5.529099999999744
+  },
+  {
+    "victim_input_weth": 0.5,
+    "attacker_volatility_weth": 10,
+    "reference_output_usdc": "1949.920724",
+    "simulated_output_usdc": "1949.920724",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 3.894600000000082
+  },
+  {
+    "victim_input_weth": 0.5,
+    "attacker_volatility_weth": 50,
+    "reference_output_usdc": "1949.920724",
+    "simulated_output_usdc": "1949.920724",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 3.6565999999993437
+  },
+  {
+    "victim_input_weth": 0.5,
+    "attacker_volatility_weth": 200,
+    "reference_output_usdc": "1949.920724",
+    "simulated_output_usdc": "1949.920724",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.5416999999997643
+  },
+  {
+    "victim_input_weth": 5,
+    "attacker_volatility_weth": 0,
+    "reference_output_usdc": "19492.133473",
+    "simulated_output_usdc": "19492.133473",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.485500000000684
+  },
+  {
+    "victim_input_weth": 5,
+    "attacker_volatility_weth": 10,
+    "reference_output_usdc": "19492.133473",
+    "simulated_output_usdc": "19492.133473",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.7116000000005442
+  },
+  {
+    "victim_input_weth": 5,
+    "attacker_volatility_weth": 50,
+    "reference_output_usdc": "19492.133473",
+    "simulated_output_usdc": "19492.133473",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.71559999999954
+  },
+  {
+    "victim_input_weth": 5,
+    "attacker_volatility_weth": 200,
+    "reference_output_usdc": "19492.133473",
+    "simulated_output_usdc": "19492.133473",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 3.0001000000002023
+  },
+  {
+    "victim_input_weth": 20,
+    "attacker_volatility_weth": 0,
+    "reference_output_usdc": "77874.36503",
+    "simulated_output_usdc": "77874.36503",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.1413999999986117
+  },
+  {
+    "victim_input_weth": 20,
+    "attacker_volatility_weth": 10,
+    "reference_output_usdc": "77874.36503",
+    "simulated_output_usdc": "77874.36503",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.246000000001004
+  },
+  {
+    "victim_input_weth": 20,
+    "attacker_volatility_weth": 50,
+    "reference_output_usdc": "77874.36503",
+    "simulated_output_usdc": "77874.36503",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.1172999999998865
+  },
+  {
+    "victim_input_weth": 20,
+    "attacker_volatility_weth": 200,
+    "reference_output_usdc": "77874.36503",
+    "simulated_output_usdc": "77874.36503",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.940200000000914
+  },
+  {
+    "victim_input_weth": 50,
+    "attacker_volatility_weth": 0,
+    "reference_output_usdc": "194216.770178",
+    "simulated_output_usdc": "194216.770178",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 1.9544000000005326
+  },
+  {
+    "victim_input_weth": 50,
+    "attacker_volatility_weth": 10,
+    "reference_output_usdc": "194216.770178",
+    "simulated_output_usdc": "194216.770178",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 3.2607000000007247
+  },
+  {
+    "victim_input_weth": 50,
+    "attacker_volatility_weth": 50,
+    "reference_output_usdc": "194216.770178",
+    "simulated_output_usdc": "194216.770178",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.424299999998766
+  },
+  {
+    "victim_input_weth": 50,
+    "attacker_volatility_weth": 200,
+    "reference_output_usdc": "194216.770178",
+    "simulated_output_usdc": "194216.770178",
+    "slippage_deviation": 0,
+    "normalized_risk_score": 0,
+    "decision": "Execute",
+    "execution_allowed": true,
+    "latency_ms": 2.136400000001231
+  }
+]

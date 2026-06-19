@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const { performance } = require("perf_hooks");
 const {
   WETH_ADDRESS,
   USDC_ADDRESS,
@@ -84,6 +85,7 @@ async function main() {
     // 2. Pre-Broadcast Simulation
     // We evaluate pre-broadcast transaction parameters before the transaction enters the public mempool.
     console.log("Analyzing pre-broadcast transaction parameters...");
+    const evalStartTime = performance.now();
     const simulatedQuoteWei = await getQuote(router, amountIn, path);
     const simulatedOutput = hre.ethers.formatUnits(
       simulatedQuoteWei,
@@ -116,6 +118,10 @@ async function main() {
       riskMetrics.normalized_risk_score,
       decisionThresholds,
     );
+
+    const evalEndTime = performance.now();
+    const padgfEvaluationLatencyMs = evalEndTime - evalStartTime;
+    console.log(`PADGF Evaluation Latency: ${padgfEvaluationLatencyMs.toFixed(2)} ms`);
 
     console.log(`PADGF Decision: [${decisionResult.decision}]`);
     console.log(`Reasoning: ${decisionResult.reason}`);
@@ -184,6 +190,7 @@ async function main() {
       execution_allowed: decisionResult.execution_allowed,
       execution_status: executionStatus,
       transaction_hash: transactionHash,
+      padgf_evaluation_latency_ms: padgfEvaluationLatencyMs,
     });
 
     saveResult(resultData, "protected_swap_result.json");

@@ -41,6 +41,7 @@ function formatOutput(data) {
       execution_allowed: data.execution_allowed,
       execution_status: data.execution_status,
       transaction_hash: data.transaction_hash,
+      padgf_evaluation_latency_ms: data.padgf_evaluation_latency_ms,
       timestamp: new Date().toISOString(),
     };
   }
@@ -92,8 +93,8 @@ function saveResult(formattedData, fileName = "baseline_result.json") {
   ) {
     csvPath = path.join(resultsDir, "protected_swap_summary.csv");
     header =
-      "scenario_name,fork_block,dex,input_token,output_token,input_amount,reference_output,simulated_output,slippage_deviation,padgf_decision,execution_allowed,status\n";
-    row = `${formattedData.scenario_name},${formattedData.fork_block},${formattedData.dex},${formattedData.input_token},${formattedData.output_token},${formattedData.input_amount},${formattedData.reference_output},${formattedData.simulated_output},${formattedData.slippage_deviation},${formattedData.padgf_decision},${formattedData.execution_allowed},${formattedData.execution_status}\n`;
+      "scenario_name,fork_block,dex,input_token,output_token,input_amount,reference_output,simulated_output,slippage_deviation,padgf_decision,execution_allowed,latency_ms,status\n";
+    row = `${formattedData.scenario_name},${formattedData.fork_block},${formattedData.dex},${formattedData.input_token},${formattedData.output_token},${formattedData.input_amount},${formattedData.reference_output},${formattedData.simulated_output},${formattedData.slippage_deviation},${formattedData.padgf_decision},${formattedData.execution_allowed},${formattedData.padgf_evaluation_latency_ms},${formattedData.execution_status}\n`;
 
     // Generate Markdown Report
     const mdPath = path.join(resultsDir, "phase3_protected_swap_report.md");
@@ -112,6 +113,7 @@ function saveResult(formattedData, fileName = "baseline_result.json") {
 - **Slippage Deviation:** ${parseFloat(formattedData.slippage_deviation).toFixed(4)}%
 - **Price Impact Proxy:** ${parseFloat(formattedData.price_impact).toFixed(4)}%
 - **Normalized Risk Score:** **${parseFloat(formattedData.normalized_risk_score).toFixed(4)}**
+- **Evaluation Latency (Local):** ${formattedData.padgf_evaluation_latency_ms ? formattedData.padgf_evaluation_latency_ms.toFixed(2) : "N/A"} ms
 
 ## PADGF Decision
 - **Thresholds Used:** tau1 = ${formattedData.threshold_values.tau1}, tau2 = ${formattedData.threshold_values.tau2}

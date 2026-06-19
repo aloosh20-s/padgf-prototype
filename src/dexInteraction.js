@@ -113,4 +113,22 @@ async function executeSwap(
   }
 }
 
-module.exports = { getTokens, getRouter, getQuote, executeSwap };
+/**
+ * ==========================================
+ * UNISWAP V3 ARCHITECTURE (FUTURE WORK STUBS)
+ * ==========================================
+ * These stubs establish the interface required to evaluate PADGF on Uniswap V3's 
+ * concentrated liquidity model using QuoterV2 and SwapRouter.
+ */
+
+async function getQuoteV3(quoterV2, path, amountIn) {
+  // Requires QuoterV2 ABI: quoteExactInputSingle
+  throw new Error("getQuoteV3: Not yet implemented for Phase 3 prototype.");
+}
+
+async function executeSwapV3(routerV3, weth, amountIn, expectedOutput, path, signer, slippagePercent) {
+  // Requires SwapRouter ABI: exactInputSingle
+  throw new Error("executeSwapV3: Not yet implemented for Phase 3 prototype.");
+}
+
+module.exports = { getTokens, getRouter, getQuote, executeSwap, getQuoteV3, executeSwapV3 };

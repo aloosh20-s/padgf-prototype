@@ -40,6 +40,7 @@ function renderTable(data) {
         { label: "Slippage Deviation", key: "slippage_deviation", default: "N/A", formatter: (d) => d.slippage_deviation ? `${parseFloat(d.slippage_deviation).toFixed(4)}%` : "N/A" },
         { label: "Gas Used", key: "gas_used", fb: "victim_gas_used", formatter: (d) => d.gas_used || d.victim_gas_used || "N/A" },
         { label: "Risk Score", key: "normalized_risk_score", default: "N/A", formatter: (d) => d.normalized_risk_score ? parseFloat(d.normalized_risk_score).toFixed(4) : "N/A" },
+        { label: "Evaluation Latency", key: "padgf_evaluation_latency_ms", default: "N/A", formatter: (d) => d.padgf_evaluation_latency_ms ? `${parseFloat(d.padgf_evaluation_latency_ms).toFixed(2)} ms` : "N/A" },
         { label: "PADGF Decision", key: "padgf_decision", default: "N/A" },
         { label: "Execution Status", key: "execution_status" }
     ];

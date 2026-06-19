@@ -13,6 +13,7 @@
 - **Slippage Deviation:** 1.5636%
 - **Price Impact Proxy:** 1.3291%
 - **Normalized Risk Score:** **0.1776**
+- **Evaluation Latency (Local):** 9.82 ms
 
 ## PADGF Decision
 - **Thresholds Used:** tau1 = 0.3, tau2 = 0.7
