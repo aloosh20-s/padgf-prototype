@@ -1,0 +1,111 @@
+<h1>Comprehensive Guide to PADGF: PreSend Adaptive Decision Guard Framework</h1>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#part-1-end-user-guide">Part 1: End-User Guide</a></li>
+<li><a href="#part-2-provider-and-developer-guide">Part 2: Provider and Developer Guide</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ol>
+<hr>
+<h2>Introduction</h2>
+<h3>What is PADGF?</h3>
+<p>The <strong>PreSend Adaptive Decision Guard Framework (PADGF)</strong> is a localized, client-side algorithmic prototype. It is designed to evaluate decentralized exchange (DEX) transactions against Maximal Extractable Value (MEV) vulnerabilities—specifically sandwich attacks—<strong>before</strong> they are broadcast to the public mempool.</p>
+<h3>The Problem: MEV and Sandwich Attacks</h3>
+<p>When a user submits a swap transaction on a DEX (like Uniswap), it enters a public &quot;waiting room&quot; known as the mempool. Predatory arbitrage bots monitor the mempool for large transactions. When they spot one, they execute a <strong>Sandwich Attack</strong>:</p>
+<ol>
+<li><strong>Front-run</strong>: The bot buys the asset just before the user, artificially inflating the price.</li>
+<li><strong>Victim Swap</strong>: The user&#39;s transaction executes at a significantly worse price (experiencing high slippage).</li>
+<li><strong>Back-run</strong>: The bot immediately sells the asset at the inflated price, pocketing the difference as profit at the user&#39;s expense.</li>
+</ol>
+<h3>The Solution: Localized Simulation</h3>
+<p>PADGF prevents this by running a localized simulation against the current deterministic blockchain state. It calculates a dynamic <strong>Normalized Risk Score</strong> and routes the transaction through an autonomous <strong>Decision Engine</strong>. The transaction is then either Executed, Delayed, or Blocked—preventing the user&#39;s capital from ever being exposed to predators.</p>
+<hr>
+<h2>Part 1: End-User Guide</h2>
+<p>This section is for the everyday user or trader utilizing a wallet or application integrated with PADGF.</p>
+<h3>How PADGF Protects You</h3>
+<p>Traditionally, when you click &quot;Swap&quot;, your transaction goes straight to the blockchain, hoping for the best. With PADGF integrated:</p>
+<ol>
+<li><strong>You initiate a swap.</strong></li>
+<li><strong>PADGF pauses.</strong> It secretly simulates your exact transaction on a private, localized copy of the blockchain.</li>
+<li><strong>PADGF calculates the risk.</strong> It checks if your transaction is profitable enough for an attacker to sandwich.</li>
+<li><strong>PADGF makes a decision:</strong><ul>
+<li><strong>Execute (Green):</strong> The network conditions are safe. Your swap goes through immediately.</li>
+<li><strong>Delay (Yellow):</strong> There is moderate risk. PADGF holds the transaction, waiting for safer network conditions.</li>
+<li><strong>Block (Red):</strong> The risk is critically high. PADGF stops the transaction to save your funds.</li>
+</ul>
+</li>
+</ol>
+<h3>Using the PADGF Dashboard</h3>
+<p>If you are evaluating PADGF via its prototype dashboard:</p>
+<ol>
+<li>Double-click the <code>Run-PADGF-Dashboard.bat</code> file.</li>
+<li>Open your web browser and navigate to <code>http://localhost:3000</code>.</li>
+<li>You will see an evaluation matrix with intuitive visual graphs mapping the expected output (Baseline) vs. the Attacked output vs. the Protected output.</li>
+</ol>
+<h3>Interpreting Risk</h3>
+<p>PADGF uses factors like your set slippage, the current gas price, and the expected price impact to generate a final risk score. You don&#39;t need to know the math; you simply trust the Engine&#39;s color-coded output. If your transaction is <strong>Blocked</strong>, simply try again with a tighter slippage tolerance or wait for network volatility to decrease.</p>
+<hr>
+<h2>Part 2: Provider and Developer Guide</h2>
+<p>This section is intended for wallet providers, node operators, researchers, and developers integrating or extending the PADGF architecture.</p>
+<h3>Architecture Overview</h3>
+<p>PADGF operates entirely client-side (or on the provider&#39;s backend) prior to broadcasting to the public mempool. It uses a deterministic mainnet fork (via Hardhat) to achieve perfect state-isolation for its simulations.</p>
+<h3>Core Modules</h3>
+<p>The logic is cleanly separated into modular components located in the <code>/src</code> directory:</p>
+<ol>
+<li><strong>Provider Setup (<code>providerSetup.js</code>)</strong><ul>
+<li>Handles the Hardhat network state. To ensure deterministic testing, it impersonates a whale account and funds it with simulated ETH to cover gas costs.</li>
+</ul>
+</li>
+<li><strong>DEX Interaction (<code>dexInteraction.js</code>)</strong><ul>
+<li>Manages on-chain communication with the Uniswap V2 Router and ERC20 tokens.</li>
+<li>Fetches quotes (<code>getAmountsOut</code>) to establish pristine baselines.</li>
+<li>Calculates gas fees dynamically and handles transaction execution limits.</li>
+</ul>
+</li>
+<li><strong>Risk Evaluator (<code>riskEvaluator.js</code>)</strong><ul>
+<li>The mathematical engine. It calculates:<ul>
+<li><em>Slippage Deviation</em>: Difference between expected and simulated outputs.</li>
+<li><em>Attacker Net Profit</em>: Evaluates the extracted value minus standard pool fees, builder bribes (e.g., 90%), and network gas costs.</li>
+</ul>
+</li>
+<li>Returns a <strong>Normalized Risk Score (R)</strong> between 0.0 and 1.0.</li>
+</ul>
+</li>
+<li><strong>Decision Engine (<code>decisionEngine.js</code>)</strong><ul>
+<li>Evaluates the Risk Score against configurable thresholds (Tau 1 and Tau 2).</li>
+<li><strong>R &lt; Tau 1 (e.g., 0.3)</strong> -&gt; <code>Execute</code></li>
+<li><strong>Tau 1 &lt;= R &lt; Tau 2 (e.g., 0.7)</strong> -&gt; <code>Delay</code></li>
+<li><strong>R &gt;= Tau 2</strong> -&gt; <code>Block</code></li>
+</ul>
+</li>
+</ol>
+<h3>The Mathematical Model</h3>
+<p>The framework relies on a normalized function:
+<strong>R = (w1 * Normalized Profitability) + (w2 * Normalized Slippage)</strong></p>
+<p>Where <code>w1</code> and <code>w2</code> are adjustable weights based on the provider&#39;s risk appetite. By converting raw ETH values and slippage percentages into standardized 0.0 - 1.0 bounds, PADGF can universally evaluate any trade size objectively.</p>
+<h3>Experimental Execution Flows</h3>
+<p>For research and validation, PADGF relies on three strict phases located in <code>/scripts</code>:</p>
+<ol>
+<li><strong>Phase 1: Baseline Swaps (<code>baseline-swap.js</code>)</strong><ul>
+<li>Establishes a ground-truth benchmark with zero interference.</li>
+</ul>
+</li>
+<li><strong>Phase 2: MEV Attack Simulation (<code>sandwich-attack.js</code>)</strong><ul>
+<li>Proves vulnerability. An attacker front-runs the victim (inflating price), the victim swaps (absorbing damage), and the attacker back-runs (profiting).</li>
+</ul>
+</li>
+<li><strong>Phase 3: Protected Swaps (<code>protected-swap.js</code>)</strong><ul>
+<li>The core pipeline. Simulates the swap via <code>eth_call</code> without broadcasting, evaluates the risk, and autonomously decides whether to proceed with <code>executeSwap()</code>.</li>
+</ul>
+</li>
+</ol>
+<h3>Integration Guidelines</h3>
+<p>If extending PADGF for a production environment:</p>
+<ul>
+<li><strong>Custom Risk Models</strong>: Adjust <code>w1</code> and <code>w2</code> inside <code>src/riskEvaluator.js</code>, or incorporate historical pool volatility.</li>
+<li><strong>DEX Support</strong>: Extend <code>src/dexInteraction.js</code> to support Uniswap V3 or Curve routing.</li>
+<li><strong>Automated Delay Queues</strong>: Expand <code>src/decisionEngine.js</code> to place Delayed transactions into a Redis queue, polling mempool conditions every block until risk drops below the acceptable threshold.</li>
+</ul>
+<hr>
+<h2>Conclusion</h2>
+<p>The PreSend Adaptive Decision Guard Framework (PADGF) represents a proactive paradigm shift in decentralized finance security. Instead of reacting to attacks or relying solely on private RPCs, PADGF empowers end-users and providers with algorithmic, pre-broadcast simulation and automated decision-making. By implementing PADGF, providers can guarantee capital safety and eliminate sandwich attack vulnerabilities entirely.</p>

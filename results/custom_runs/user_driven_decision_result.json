@@ -3,7 +3,7 @@
   "official_thesis_data": false,
   "exploratory_only": true,
   "input_amount": "50",
-  "slippage_tolerance": "5%",
+  "slippage_tolerance": "1%",
   "reference_output": "194216.770178",
   "simulated_output": "160288.35795",
   "actual_output": null,
@@ -31,5 +31,5 @@
   "execution_status": "failed: Swap Execution Error: Error: VM Exception while processing transaction: reverted with reason string 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT'",
   "transaction_hash": null,
   "output_artifact": "results/custom_runs/user_driven_decision_result.json",
-  "timestamp": "2026-06-19T23:45:37.275Z"
+  "timestamp": "2026-06-24T19:28:15.752Z"
 }

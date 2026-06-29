@@ -1,0 +1,15 @@
+{
+  "scenario_name": "Phase 1 Baseline",
+  "fork_block": 19400000,
+  "dex": "Uniswap V2",
+  "input_token": "WETH",
+  "output_token": "USDC",
+  "input_amount": "14",
+  "slippage_tolerance": "1%",
+  "expected_output": "0",
+  "actual_output": "0",
+  "gas_used": "0",
+  "transaction_hash": "N/A",
+  "execution_status": "error: HH108: Cannot connect to the network localhost.\nPlease make sure your node is running, and check your internet connection and networks config",
+  "timestamp": "2026-06-24T19:19:28.337Z"
+}
